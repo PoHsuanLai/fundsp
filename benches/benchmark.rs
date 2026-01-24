@@ -87,6 +87,21 @@ fn phaser_bench(_dummy: usize) -> Wave {
     )
 }
 
+fn lr_crossover_bench(_dummy: usize) -> Wave {
+    // LR4 crossover at 1kHz - common multiband split point
+    Wave::render(44100.0, 1.0, &mut (noise() >> lr_crossover_hz(1000.0)))
+}
+
+fn lr_lowpass_bench(_dummy: usize) -> Wave {
+    // LR4 lowpass - used in multiband processing
+    Wave::render(44100.0, 1.0, &mut (noise() >> lr_lowpass_hz(1000.0)))
+}
+
+fn lr_highpass_bench(_dummy: usize) -> Wave {
+    // LR4 highpass - used in multiband processing
+    Wave::render(44100.0, 1.0, &mut (noise() >> lr_highpass_hz(1000.0)))
+}
+
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("netpass", |b| {
         b.iter(|| netpass_bench(core::hint::black_box(0)))
@@ -119,6 +134,15 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("phaser", |b| {
         b.iter(|| phaser_bench(core::hint::black_box(0)))
+    });
+    c.bench_function("lr_crossover", |b| {
+        b.iter(|| lr_crossover_bench(core::hint::black_box(0)))
+    });
+    c.bench_function("lr_lowpass", |b| {
+        b.iter(|| lr_lowpass_bench(core::hint::black_box(0)))
+    });
+    c.bench_function("lr_highpass", |b| {
+        b.iter(|| lr_highpass_bench(core::hint::black_box(0)))
     });
 }
 

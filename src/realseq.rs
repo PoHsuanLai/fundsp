@@ -21,6 +21,8 @@ pub(crate) enum Message {
     Edit(EventId, Edit),
     /// Edit event in relative time.
     EditRelative(EventId, Edit),
+    /// Remove event and return its AudioUnit.
+    Remove(EventId),
 }
 
 #[derive(Default)]
@@ -93,6 +95,12 @@ impl SequencerBackend {
                     Message::EditRelative(id, edit) => {
                         self.sequencer
                             .edit_relative(id, edit.end_time, edit.fade_out);
+                    }
+                    Message::Remove(id) => {
+                        // Remove the event from the sequencer
+                        // The unit is extracted and can be returned via a different mechanism
+                        // For now, just remove it (the frontend handles extraction directly)
+                        let _ = self.sequencer.remove(id);
                     }
                 }
             }
