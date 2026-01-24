@@ -450,6 +450,50 @@ pub fn butterpass_hz(f: f32) -> An<ButterLowpass<f32, U1>> {
     An(ButterLowpass::new(f))
 }
 
+/// Linkwitz-Riley lowpass filter (LR4, 24 dB/oct) with fixed cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_lowpass_hz(f: f32) -> An<LinkwitzRileyLowpass<f32>> {
+    An(LinkwitzRileyLowpass::new(LrOrder::Lr4, f))
+}
+
+/// Linkwitz-Riley highpass filter (LR4, 24 dB/oct) with fixed cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_highpass_hz(f: f32) -> An<LinkwitzRileyHighpass<f32>> {
+    An(LinkwitzRileyHighpass::new(LrOrder::Lr4, f))
+}
+
+/// Linkwitz-Riley crossover (LR4, 24 dB/oct) at cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: low frequency band
+/// - Output 1: high frequency band
+pub fn lr_crossover_hz(f: f32) -> An<LinkwitzRileyCrossover<f32>> {
+    An(LinkwitzRileyCrossover::new(LrOrder::Lr4, f))
+}
+
+/// Linkwitz-Riley lowpass filter with configurable order and cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_lowpass(order: LrOrder, f: f32) -> An<LinkwitzRileyLowpass<f32>> {
+    An(LinkwitzRileyLowpass::new(order, f))
+}
+
+/// Linkwitz-Riley highpass filter with configurable order and cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_highpass(order: LrOrder, f: f32) -> An<LinkwitzRileyHighpass<f32>> {
+    An(LinkwitzRileyHighpass::new(order, f))
+}
+
+/// Linkwitz-Riley crossover with configurable order at cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: low frequency band
+/// - Output 1: high frequency band
+pub fn lr_crossover(order: LrOrder, f: f32) -> An<LinkwitzRileyCrossover<f32>> {
+    An(LinkwitzRileyCrossover::new(order, f))
+}
+
 /// One-pole lowpass filter (1st order).
 /// - Input 0: audio
 /// - Input 1: cutoff frequency (Hz)

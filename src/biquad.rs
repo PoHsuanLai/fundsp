@@ -115,6 +115,44 @@ impl<F: Float> BiquadCoefs<F> {
         Self { a1, a2, b0, b1, b2 }
     }
 
+    /// Return settings for a Butterworth highpass filter.
+    /// Sample rate is in Hz.
+    /// Cutoff is the -3 dB point of the filter in Hz.
+    #[inline]
+    pub fn butter_highpass(sample_rate: F, cutoff: F) -> Self {
+        let c = F::from_f32;
+        let f: F = tan(cutoff * F::PI / sample_rate);
+        let a0r: F = c(1.0) / (c(1.0) + F::SQRT_2 * f + f * f);
+        let a1: F = (c(2.0) * f * f - c(2.0)) * a0r;
+        let a2: F = (c(1.0) - F::SQRT_2 * f + f * f) * a0r;
+        let b0: F = a0r;
+        let b1: F = c(-2.0) * a0r;
+        let b2: F = a0r;
+        Self { a1, a2, b0, b1, b2 }
+    }
+
+    /// Return settings for a Linkwitz-Riley lowpass filter (single 2nd-order stage).
+    /// LR filters are squared Butterworth filters.
+    /// - LR2 = 1 stage (12 dB/oct), -3 dB at cutoff per band
+    /// - LR4 = 2 stages (24 dB/oct), -6 dB at cutoff per band
+    /// - LR8 = 4 stages (48 dB/oct), -12 dB at cutoff per band
+    #[inline]
+    pub fn linkwitz_riley_lowpass(sample_rate: F, cutoff: F) -> Self {
+        // LR uses Butterworth (Q = 1/sqrt(2)) - cascading squares the response
+        Self::butter_lowpass(sample_rate, cutoff)
+    }
+
+    /// Return settings for a Linkwitz-Riley highpass filter (single 2nd-order stage).
+    /// LR filters are squared Butterworth filters.
+    /// - LR2 = 1 stage (12 dB/oct), -3 dB at cutoff per band
+    /// - LR4 = 2 stages (24 dB/oct), -6 dB at cutoff per band
+    /// - LR8 = 4 stages (48 dB/oct), -12 dB at cutoff per band
+    #[inline]
+    pub fn linkwitz_riley_highpass(sample_rate: F, cutoff: F) -> Self {
+        // LR uses Butterworth (Q = 1/sqrt(2)) - cascading squares the response
+        Self::butter_highpass(sample_rate, cutoff)
+    }
+
     /// Frequency response at frequency `omega` expressed as fraction of sampling rate.
     pub fn response(&self, omega: f64) -> Complex64 {
         let z1 = Complex64::from_polar(1.0, -f64::TAU * omega);
@@ -916,5 +954,386 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> AudioNode for FixedDirtyBiquad<F, M, S
 
     fn route(&mut self, input: &SignalFrame, _frequency: f64) -> SignalFrame {
         Routing::Arbitrary(0.0).route(input, self.outputs())
+    }
+}
+
+// ============================================================================
+// Linkwitz-Riley Filters
+// ============================================================================
+
+/// Linkwitz-Riley filter order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LrOrder {
+    /// LR2: 12 dB/octave (1 biquad stage)
+    Lr2,
+    /// LR4: 24 dB/octave (2 biquad stages) - most common for crossovers
+    Lr4,
+    /// LR8: 48 dB/octave (4 biquad stages) - steeper, more phase shift
+    Lr8,
+}
+
+impl LrOrder {
+    /// Number of biquad stages for this order.
+    pub fn stages(self) -> usize {
+        match self {
+            LrOrder::Lr2 => 1,
+            LrOrder::Lr4 => 2,
+            LrOrder::Lr8 => 4,
+        }
+    }
+}
+
+/// Linkwitz-Riley lowpass filter.
+///
+/// LR filters are designed for crossovers: the lowpass and highpass outputs
+/// sum to unity (flat magnitude response) with matched phase at all frequencies.
+///
+/// - Input 0: input signal
+/// - Output 0: filtered signal
+#[derive(Clone)]
+pub struct LinkwitzRileyLowpass<F: Real> {
+    order: LrOrder,
+    biquads: [Biquad<F>; 4], // Max 4 stages for LR8
+    sample_rate: F,
+    cutoff: F,
+}
+
+impl<F: Real> LinkwitzRileyLowpass<F> {
+    /// Create new Linkwitz-Riley lowpass filter.
+    pub fn new(order: LrOrder, cutoff: F) -> Self {
+        let mut filter = Self {
+            order,
+            biquads: [
+                Biquad::new(),
+                Biquad::new(),
+                Biquad::new(),
+                Biquad::new(),
+            ],
+            sample_rate: F::from_f64(DEFAULT_SR),
+            cutoff,
+        };
+        filter.update_coefficients();
+        filter
+    }
+
+    /// Set cutoff frequency in Hz.
+    pub fn set_cutoff(&mut self, cutoff: F) {
+        self.cutoff = cutoff;
+        self.update_coefficients();
+    }
+
+    fn update_coefficients(&mut self) {
+        let coefs = BiquadCoefs::linkwitz_riley_lowpass(self.sample_rate, self.cutoff);
+        for i in 0..self.order.stages() {
+            self.biquads[i].set_coefs(coefs);
+        }
+    }
+}
+
+impl<F: Real> AudioNode for LinkwitzRileyLowpass<F> {
+    const ID: u64 = 92;
+    type Inputs = U1;
+    type Outputs = U1;
+
+    fn reset(&mut self) {
+        for biquad in &mut self.biquads {
+            biquad.reset();
+        }
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_rate = F::from_f64(sample_rate);
+        for biquad in &mut self.biquads {
+            biquad.set_sample_rate(sample_rate);
+        }
+        self.update_coefficients();
+    }
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let mut frame = *input;
+        for i in 0..self.order.stages() {
+            frame = self.biquads[i].tick(&frame);
+        }
+        frame
+    }
+
+    fn set(&mut self, setting: Setting) {
+        if let Parameter::Center(cutoff) = setting.parameter() {
+            self.set_cutoff(F::from_f32(*cutoff));
+        }
+    }
+
+    fn route(&mut self, input: &SignalFrame, frequency: f64) -> SignalFrame {
+        // Compute cascaded response
+        let mut response = self.biquads[0]
+            .coefs()
+            .response(frequency / self.sample_rate.to_f64());
+        for i in 1..self.order.stages() {
+            response = response
+                * self.biquads[i]
+                    .coefs()
+                    .response(frequency / self.sample_rate.to_f64());
+        }
+        let mut output = SignalFrame::new(self.outputs());
+        output.set(0, input.at(0).filter(0.0, |r| r * response));
+        output
+    }
+}
+
+/// Linkwitz-Riley highpass filter.
+///
+/// LR filters are designed for crossovers: the lowpass and highpass outputs
+/// sum to unity (flat magnitude response) with matched phase at all frequencies.
+///
+/// - Input 0: input signal
+/// - Output 0: filtered signal
+#[derive(Clone)]
+pub struct LinkwitzRileyHighpass<F: Real> {
+    order: LrOrder,
+    biquads: [Biquad<F>; 4],
+    sample_rate: F,
+    cutoff: F,
+}
+
+impl<F: Real> LinkwitzRileyHighpass<F> {
+    /// Create new Linkwitz-Riley highpass filter.
+    pub fn new(order: LrOrder, cutoff: F) -> Self {
+        let mut filter = Self {
+            order,
+            biquads: [
+                Biquad::new(),
+                Biquad::new(),
+                Biquad::new(),
+                Biquad::new(),
+            ],
+            sample_rate: F::from_f64(DEFAULT_SR),
+            cutoff,
+        };
+        filter.update_coefficients();
+        filter
+    }
+
+    /// Set cutoff frequency in Hz.
+    pub fn set_cutoff(&mut self, cutoff: F) {
+        self.cutoff = cutoff;
+        self.update_coefficients();
+    }
+
+    fn update_coefficients(&mut self) {
+        let coefs = BiquadCoefs::linkwitz_riley_highpass(self.sample_rate, self.cutoff);
+        for i in 0..self.order.stages() {
+            self.biquads[i].set_coefs(coefs);
+        }
+    }
+}
+
+impl<F: Real> AudioNode for LinkwitzRileyHighpass<F> {
+    const ID: u64 = 93;
+    type Inputs = U1;
+    type Outputs = U1;
+
+    fn reset(&mut self) {
+        for biquad in &mut self.biquads {
+            biquad.reset();
+        }
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_rate = F::from_f64(sample_rate);
+        for biquad in &mut self.biquads {
+            biquad.set_sample_rate(sample_rate);
+        }
+        self.update_coefficients();
+    }
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let mut frame = *input;
+        for i in 0..self.order.stages() {
+            frame = self.biquads[i].tick(&frame);
+        }
+        frame
+    }
+
+    fn set(&mut self, setting: Setting) {
+        if let Parameter::Center(cutoff) = setting.parameter() {
+            self.set_cutoff(F::from_f32(*cutoff));
+        }
+    }
+
+    fn route(&mut self, input: &SignalFrame, frequency: f64) -> SignalFrame {
+        let mut response = self.biquads[0]
+            .coefs()
+            .response(frequency / self.sample_rate.to_f64());
+        for i in 1..self.order.stages() {
+            response = response
+                * self.biquads[i]
+                    .coefs()
+                    .response(frequency / self.sample_rate.to_f64());
+        }
+        let mut output = SignalFrame::new(self.outputs());
+        output.set(0, input.at(0).filter(0.0, |r| r * response));
+        output
+    }
+}
+
+/// Linkwitz-Riley crossover filter.
+///
+/// Splits the input signal into low and high frequency bands.
+/// The two bands sum to unity (flat magnitude response) at all frequencies.
+///
+/// - Input 0: input signal
+/// - Output 0: low frequency band
+/// - Output 1: high frequency band
+#[derive(Clone)]
+pub struct LinkwitzRileyCrossover<F: Real> {
+    lowpass: LinkwitzRileyLowpass<F>,
+    highpass: LinkwitzRileyHighpass<F>,
+}
+
+impl<F: Real> LinkwitzRileyCrossover<F> {
+    /// Create new Linkwitz-Riley crossover at `cutoff` frequency in Hz.
+    pub fn new(order: LrOrder, cutoff: F) -> Self {
+        Self {
+            lowpass: LinkwitzRileyLowpass::new(order, cutoff),
+            highpass: LinkwitzRileyHighpass::new(order, cutoff),
+        }
+    }
+
+    /// Set crossover frequency in Hz.
+    pub fn set_cutoff(&mut self, cutoff: F) {
+        self.lowpass.set_cutoff(cutoff);
+        self.highpass.set_cutoff(cutoff);
+    }
+}
+
+impl<F: Real> AudioNode for LinkwitzRileyCrossover<F> {
+    const ID: u64 = 94;
+    type Inputs = U1;
+    type Outputs = U2;
+
+    fn reset(&mut self) {
+        self.lowpass.reset();
+        self.highpass.reset();
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.lowpass.set_sample_rate(sample_rate);
+        self.highpass.set_sample_rate(sample_rate);
+    }
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let low = self.lowpass.tick(input);
+        let high = self.highpass.tick(input);
+        [low[0], high[0]].into()
+    }
+
+    fn set(&mut self, setting: Setting) {
+        if let Parameter::Center(cutoff) = setting.parameter() {
+            self.set_cutoff(F::from_f32(*cutoff));
+        }
+    }
+
+    fn route(&mut self, input: &SignalFrame, frequency: f64) -> SignalFrame {
+        let low_out = self.lowpass.route(input, frequency);
+        let high_out = self.highpass.route(input, frequency);
+        let mut output = SignalFrame::new(self.outputs());
+        output.set(0, low_out.at(0));
+        output.set(1, high_out.at(0));
+        output
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_linkwitz_riley_crossover_sums_flat() {
+        // LR crossover should sum to unity (within tolerance)
+        // Test with a DC signal to verify steady-state behavior
+        let mut crossover: LinkwitzRileyCrossover<f64> =
+            LinkwitzRileyCrossover::new(LrOrder::Lr4, 1000.0);
+        crossover.set_sample_rate(44100.0);
+
+        // Let the filter settle with DC input
+        let dc: Frame<f32, U1> = [1.0].into();
+        let mut output = [0.0f32; 2];
+
+        for _ in 0..1000 {
+            let out = crossover.tick(&dc);
+            output = [out[0], out[1]];
+        }
+
+        // After settling, low + high should equal input (DC = 1.0)
+        let sum = output[0] + output[1];
+        assert!(
+            (sum - 1.0).abs() < 0.001,
+            "Steady-state sum {} should be 1.0 (low={}, high={})",
+            sum,
+            output[0],
+            output[1]
+        );
+    }
+
+    #[test]
+    fn test_linkwitz_riley_frequency_response() {
+        // At crossover frequency, both bands should be -6dB (0.5 amplitude)
+        let cutoff = 1000.0;
+        let mut crossover: LinkwitzRileyCrossover<f64> =
+            LinkwitzRileyCrossover::new(LrOrder::Lr4, cutoff);
+        crossover.set_sample_rate(44100.0);
+
+        // Generate a sine wave at the crossover frequency
+        let sample_rate = 44100.0;
+        let omega = 2.0 * core::f64::consts::PI * cutoff / sample_rate;
+
+        // Let filter settle
+        for i in 0..2000 {
+            let sample = (omega * i as f64).sin() as f32;
+            let _ = crossover.tick(&[sample].into());
+        }
+
+        // Measure amplitude over one cycle
+        let samples_per_cycle = (sample_rate / cutoff) as usize;
+        let mut low_max = 0.0f32;
+        let mut high_max = 0.0f32;
+
+        for i in 0..samples_per_cycle {
+            let sample = (omega * (2000 + i) as f64).sin() as f32;
+            let out = crossover.tick(&[sample].into());
+            low_max = low_max.max(out[0].abs());
+            high_max = high_max.max(out[1].abs());
+        }
+
+        // At crossover, each band should be approximately -6dB (0.5)
+        // Allow some tolerance for filter settling
+        assert!(
+            (low_max - 0.5).abs() < 0.1,
+            "Low band at crossover should be ~0.5, got {}",
+            low_max
+        );
+        assert!(
+            (high_max - 0.5).abs() < 0.1,
+            "High band at crossover should be ~0.5, got {}",
+            high_max
+        );
+    }
+
+    #[test]
+    fn test_lr_orders() {
+        // Test different orders compile and run
+        for order in [LrOrder::Lr2, LrOrder::Lr4, LrOrder::Lr8] {
+            let mut lp: LinkwitzRileyLowpass<f64> = LinkwitzRileyLowpass::new(order, 1000.0);
+            let mut hp: LinkwitzRileyHighpass<f64> = LinkwitzRileyHighpass::new(order, 1000.0);
+            lp.set_sample_rate(44100.0);
+            hp.set_sample_rate(44100.0);
+
+            let input: Frame<f32, U1> = [1.0].into();
+            let _ = lp.tick(&input);
+            let _ = hp.tick(&input);
+        }
     }
 }

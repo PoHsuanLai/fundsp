@@ -449,6 +449,54 @@ pub fn butterpass_hz<F: Real>(f: F) -> An<ButterLowpass<F, U1>> {
     An(ButterLowpass::new(f))
 }
 
+/// Linkwitz-Riley lowpass filter (LR4, 24 dB/oct) with fixed cutoff `f` Hz.
+/// LR filters sum flat with their corresponding highpass.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_lowpass_hz<F: Real>(f: F) -> An<LinkwitzRileyLowpass<F>> {
+    An(LinkwitzRileyLowpass::new(LrOrder::Lr4, f))
+}
+
+/// Linkwitz-Riley highpass filter (LR4, 24 dB/oct) with fixed cutoff `f` Hz.
+/// LR filters sum flat with their corresponding lowpass.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_highpass_hz<F: Real>(f: F) -> An<LinkwitzRileyHighpass<F>> {
+    An(LinkwitzRileyHighpass::new(LrOrder::Lr4, f))
+}
+
+/// Linkwitz-Riley crossover (LR4, 24 dB/oct) at cutoff `f` Hz.
+/// Splits input into low and high bands that sum to unity.
+/// - Input 0: audio
+/// - Output 0: low frequency band
+/// - Output 1: high frequency band
+pub fn lr_crossover_hz<F: Real>(f: F) -> An<LinkwitzRileyCrossover<F>> {
+    An(LinkwitzRileyCrossover::new(LrOrder::Lr4, f))
+}
+
+/// Linkwitz-Riley lowpass filter with configurable order and cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_lowpass<F: Real>(order: LrOrder, f: F) -> An<LinkwitzRileyLowpass<F>> {
+    An(LinkwitzRileyLowpass::new(order, f))
+}
+
+/// Linkwitz-Riley highpass filter with configurable order and cutoff `f` Hz.
+/// - Input 0: audio
+/// - Output 0: filtered audio
+pub fn lr_highpass<F: Real>(order: LrOrder, f: F) -> An<LinkwitzRileyHighpass<F>> {
+    An(LinkwitzRileyHighpass::new(order, f))
+}
+
+/// Linkwitz-Riley crossover with configurable order at cutoff `f` Hz.
+/// Splits input into low and high bands that sum to unity.
+/// - Input 0: audio
+/// - Output 0: low frequency band
+/// - Output 1: high frequency band
+pub fn lr_crossover<F: Real>(order: LrOrder, f: F) -> An<LinkwitzRileyCrossover<F>> {
+    An(LinkwitzRileyCrossover::new(order, f))
+}
+
 /// One-pole lowpass filter (1st order).
 /// - Input 0: audio
 /// - Input 1: cutoff frequency (Hz)
