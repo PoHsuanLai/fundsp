@@ -49,10 +49,10 @@ impl Wave {
         let path = path.as_ref();
         let mut hint = Hint::new();
 
-        if let Some(extension) = path.extension() {
-            if let Some(extension_str) = extension.to_str() {
-                hint.with_extension(extension_str);
-            }
+        if let Some(extension) = path.extension()
+            && let Some(extension_str) = extension.to_str()
+        {
+            hint.with_extension(extension_str);
         }
 
         let source: Box<dyn MediaSource> = match File::open(path) {

@@ -131,34 +131,31 @@ impl AudioUnit for SequencerBackend {
 
     fn reset(&mut self) {
         self.handle_messages();
-        match self.sequencer.replay_mode() {
-            ReplayMode::None => {
-                while let Some(event) = self.sequencer.get_past_event() {
-                    self.fill_message.vec.push(Some(event));
-                    if self.fill_message.vec.len() == self.fill_message.vec.capacity() {
-                        let mut msg = SequencerReturn::default();
-                        core::mem::swap(&mut self.fill_message, &mut msg);
-                        if self.sender.enqueue(msg).is_ok() {}
-                    }
-                }
-                while let Some(event) = self.sequencer.get_ready_event() {
-                    self.fill_message.vec.push(Some(event));
-                    if self.fill_message.vec.len() == self.fill_message.vec.capacity() {
-                        let mut msg = SequencerReturn::default();
-                        core::mem::swap(&mut self.fill_message, &mut msg);
-                        if self.sender.enqueue(msg).is_ok() {}
-                    }
-                }
-                while let Some(event) = self.sequencer.get_active_event() {
-                    self.fill_message.vec.push(Some(event));
-                    if self.fill_message.vec.len() == self.fill_message.vec.capacity() {
-                        let mut msg = SequencerReturn::default();
-                        core::mem::swap(&mut self.fill_message, &mut msg);
-                        if self.sender.enqueue(msg).is_ok() {}
-                    }
+        if let ReplayMode::None = self.sequencer.replay_mode() {
+            while let Some(event) = self.sequencer.get_past_event() {
+                self.fill_message.vec.push(Some(event));
+                if self.fill_message.vec.len() == self.fill_message.vec.capacity() {
+                    let mut msg = SequencerReturn::default();
+                    core::mem::swap(&mut self.fill_message, &mut msg);
+                    if self.sender.enqueue(msg).is_ok() {}
                 }
             }
-            _ => (),
+            while let Some(event) = self.sequencer.get_ready_event() {
+                self.fill_message.vec.push(Some(event));
+                if self.fill_message.vec.len() == self.fill_message.vec.capacity() {
+                    let mut msg = SequencerReturn::default();
+                    core::mem::swap(&mut self.fill_message, &mut msg);
+                    if self.sender.enqueue(msg).is_ok() {}
+                }
+            }
+            while let Some(event) = self.sequencer.get_active_event() {
+                self.fill_message.vec.push(Some(event));
+                if self.fill_message.vec.len() == self.fill_message.vec.capacity() {
+                    let mut msg = SequencerReturn::default();
+                    core::mem::swap(&mut self.fill_message, &mut msg);
+                    if self.sender.enqueue(msg).is_ok() {}
+                }
+            }
         }
         self.sequencer.reset();
     }
@@ -173,11 +170,8 @@ impl AudioUnit for SequencerBackend {
         self.handle_messages();
         self.sequencer.tick(input, output);
         // Tick and process are the only places where events may be pushed to the past vector.
-        match self.sequencer.replay_mode() {
-            ReplayMode::None => {
-                self.send_back_past();
-            }
-            _ => (),
+        if let ReplayMode::None = self.sequencer.replay_mode() {
+            self.send_back_past();
         }
     }
 
@@ -185,11 +179,8 @@ impl AudioUnit for SequencerBackend {
         self.handle_messages();
         self.sequencer.process(size, input, output);
         // Tick and process are the only places where events may be pushed to the past vector.
-        match self.sequencer.replay_mode() {
-            ReplayMode::None => {
-                self.send_back_past();
-            }
-            _ => (),
+        if let ReplayMode::None = self.sequencer.replay_mode() {
+            self.send_back_past();
         }
     }
 

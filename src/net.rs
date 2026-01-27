@@ -382,27 +382,27 @@ impl Net {
         assert!(!link || self.vertex[node_index].inputs() == self.vertex[node_index].outputs());
         // Replace all global ports that use an output of the node.
         for channel in 0..self.outputs() {
-            if let Port::Local(index, port) = self.output_edge[channel].source {
-                if index == node_index {
-                    self.output_edge[channel].source = if link {
-                        self.vertex[node_index].source[port].source
-                    } else {
-                        Port::Zero
-                    };
-                }
+            if let Port::Local(index, port) = self.output_edge[channel].source
+                && index == node_index
+            {
+                self.output_edge[channel].source = if link {
+                    self.vertex[node_index].source[port].source
+                } else {
+                    Port::Zero
+                };
             }
         }
         // Replace all local ports that use an output of the node.
         for vertex in 0..self.size() {
             for channel in 0..self.vertex[vertex].inputs() {
-                if let Port::Local(index, port) = self.vertex[vertex].source[channel].source {
-                    if index == node_index {
-                        self.vertex[vertex].source[channel].source = if link {
-                            self.vertex[node_index].source[port].source
-                        } else {
-                            Port::Zero
-                        };
-                    }
+                if let Port::Local(index, port) = self.vertex[vertex].source[channel].source
+                    && index == node_index
+                {
+                    self.vertex[vertex].source[channel].source = if link {
+                        self.vertex[node_index].source[port].source
+                    } else {
+                        Port::Zero
+                    };
                 }
             }
         }
@@ -414,19 +414,20 @@ impl Net {
             self.node_index
                 .insert(self.vertex[node_index].id, node_index);
             for channel in 0..self.outputs() {
-                if let Port::Local(index, port) = self.output_edge[channel].source {
-                    if index == last_index {
-                        self.output_edge[channel].source = Port::Local(node_index, port);
-                    }
+                if let Port::Local(index, port) = self.output_edge[channel].source
+                    && index == last_index
+                {
+                    self.output_edge[channel].source = Port::Local(node_index, port);
                 }
             }
             for vertex in 0..self.size() - 1 {
                 for channel in 0..self.vertex[vertex].inputs() {
-                    if let Port::Local(index, port) = self.vertex[vertex].source[channel].source {
-                        if index == last_index {
-                            self.vertex[vertex].source[channel].source =
-                                Port::Local(node_index, port);
-                        }
+                    if let Port::Local(index, port) =
+                        self.vertex[vertex].source[channel].source
+                        && index == last_index
+                    {
+                        self.vertex[vertex].source[channel].source =
+                            Port::Local(node_index, port);
                     }
                 }
             }
@@ -1161,7 +1162,7 @@ impl Net {
                 }
             }
             // Send the new version over.
-            if sender.enqueue(NetMessage::Net(net)).is_ok() {}
+            if sender.enqueue(NetMessage::Net(Box::new(net))).is_ok() {}
         }
         self.revision += 1;
     }
@@ -1358,11 +1359,12 @@ impl AudioUnit for Net {
 
     fn set(&mut self, setting: Setting) {
         if let Some((sender, _receiver)) = &mut self.front {
+            #[allow(clippy::collapsible_if)]
             if sender.enqueue(NetMessage::Setting(setting)).is_ok() {}
-        } else if let Address::Node(id) = setting.direction() {
-            if let Some(index) = self.node_index.get(&id) {
-                self.vertex[*index].unit.set(setting.peel());
-            }
+        } else if let Address::Node(id) = setting.direction()
+            && let Some(index) = self.node_index.get(&id)
+        {
+            self.vertex[*index].unit.set(setting.peel());
         }
     }
 

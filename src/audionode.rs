@@ -357,6 +357,110 @@ pub trait AudioNode: Clone + Sync + Send {
     }
 }
 
+/// Generic audio processor parameterized by sample format `S`.
+///
+/// This trait mirrors `AudioNode` but allows both f32 and f64 processing
+/// via the `Sample` type parameter. The tick/process methods work with
+/// `S::Scalar` (f32 or f64) and `BufferRef<S>`/`BufferMut<S>`.
+///
+/// Nodes that want to support both f32 and f64 should implement this trait.
+/// The existing `AudioNode` trait remains the primary interface for f32 processing.
+pub trait GenericAudioNode<S: Sample>: Clone + Sync + Send {
+    /// Unique ID for hashing.
+    const ID: u64;
+    /// Input arity.
+    type Inputs: Size<S::Scalar>;
+    /// Output arity.
+    type Outputs: Size<S::Scalar>;
+
+    /// Reset state.
+    #[allow(unused_variables)]
+    fn reset(&mut self) {}
+
+    /// Set the sample rate.
+    #[allow(unused_variables)]
+    fn set_sample_rate(&mut self, sample_rate: f64) {}
+
+    /// Process one sample.
+    fn tick(&mut self, input: &Frame<S::Scalar, Self::Inputs>) -> Frame<S::Scalar, Self::Outputs>;
+
+    /// Process up to 64 samples.
+    fn process(&mut self, size: usize, input: &BufferRef<S>, output: &mut BufferMut<S>) {
+        debug_assert!(size <= MAX_BUFFER_SIZE);
+        debug_assert!(input.channels() == self.inputs());
+        debug_assert!(output.channels() == self.outputs());
+
+        let mut input_frame: Frame<S::Scalar, Self::Inputs> = Frame::default();
+
+        for i in 0..size {
+            for channel in 0..self.inputs() {
+                input_frame[channel] = input.at_scalar(channel, i);
+            }
+            let output_frame = self.tick(&input_frame);
+            for channel in 0..self.outputs() {
+                output.set_scalar(channel, i, output_frame[channel]);
+            }
+        }
+    }
+
+    /// Process remaining samples after SIMD-aligned processing.
+    #[inline]
+    fn process_remainder(&mut self, size: usize, input: &BufferRef<S>, output: &mut BufferMut<S>) {
+        debug_assert!(size <= MAX_BUFFER_SIZE);
+        debug_assert!(input.channels() == self.inputs());
+        debug_assert!(output.channels() == self.outputs());
+
+        let mut input_frame: Frame<S::Scalar, Self::Inputs> = Frame::default();
+
+        for i in (size & !S::M)..size {
+            for channel in 0..self.inputs() {
+                input_frame[channel] = input.at_scalar(channel, i);
+            }
+            let output_frame = self.tick(&input_frame);
+            for channel in 0..self.outputs() {
+                output.set_scalar(channel, i, output_frame[channel]);
+            }
+        }
+    }
+
+    /// Set a parameter.
+    #[allow(unused_variables)]
+    fn set(&mut self, setting: Setting) {}
+
+    /// Set hash.
+    #[allow(unused_variables)]
+    fn set_hash(&mut self, hash: u64) {}
+
+    /// Ping for pseudorandom hash.
+    fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
+        if !probe {
+            self.set_hash(hash.state());
+        }
+        hash.hash(Self::ID)
+    }
+
+    /// Preallocate memory.
+    fn allocate(&mut self) {}
+
+    /// Route signals.
+    #[allow(unused_variables)]
+    fn route(&mut self, input: &SignalFrame, frequency: f64) -> SignalFrame {
+        SignalFrame::new(self.outputs())
+    }
+
+    /// Number of inputs.
+    #[inline(always)]
+    fn inputs(&self) -> usize {
+        Self::Inputs::USIZE
+    }
+
+    /// Number of outputs.
+    #[inline(always)]
+    fn outputs(&self) -> usize {
+        Self::Outputs::USIZE
+    }
+}
+
 /// Pass through inputs unchanged.
 #[derive(Default, Clone)]
 pub struct MultiPass<N> {

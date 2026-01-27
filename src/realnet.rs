@@ -14,7 +14,7 @@ use alloc::boxed::Box;
 pub(crate) enum NetMessage {
     #[default]
     Null,
-    Net(Net),
+    Net(Box<Net>),
     Setting(Setting),
 }
 
@@ -23,7 +23,7 @@ pub(crate) enum NetMessage {
 pub(crate) enum NetReturn {
     #[default]
     Null,
-    Net(Net),
+    Net(Box<Net>),
     Unit(Box<dyn AudioUnit>),
 }
 
@@ -64,21 +64,21 @@ impl NetBackend {
 
     /// Handle changes made to the backend.
     fn handle_messages(&mut self) {
-        let mut latest_net: Option<Net> = None;
+        let mut latest_net: Option<Box<Net>> = None;
         #[allow(clippy::while_let_loop)]
         loop {
             match self.receiver.dequeue() {
                 Some(message) => {
                     match message {
                         NetMessage::Net(net) => {
-                            if let Some(mut net) = latest_net {
+                            if let Some(mut old_net) = latest_net {
                                 // This is not the latest network, send it back immediately for deallocation.
-                                self.net.apply_foreign_edits(&mut net, &self.sender);
+                                self.net.apply_foreign_edits(&mut old_net, &self.sender);
                                 if self
                                     .sender
                                     .as_ref()
                                     .unwrap()
-                                    .enqueue(NetReturn::Net(net))
+                                    .enqueue(NetReturn::Net(old_net))
                                     .is_ok()
                                 {}
                             }
@@ -96,7 +96,7 @@ impl NetBackend {
         if let Some(mut net) = latest_net {
             // Migrate existing nodes to the new network.
             self.net.migrate(&mut net);
-            core::mem::swap(&mut net, &mut self.net);
+            core::mem::swap(&mut *net, &mut self.net);
             self.net.apply_edits(&self.sender);
             // Send the previous network back for deallocation.
             if self

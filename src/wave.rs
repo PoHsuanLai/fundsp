@@ -1,7 +1,5 @@
 //! Multichannel wave abstraction.
 
-use core::usize;
-
 use super::audionode::*;
 use super::audiounit::*;
 use super::buffer::*;
@@ -780,10 +778,10 @@ impl AudioNode for WavePlayer {
         if self.index < self.end_point {
             let value = self.wave.at(self.channel, self.index);
             self.index += 1;
-            if self.index == self.end_point {
-                if let Some(point) = self.loop_point {
-                    self.index = point;
-                }
+            if self.index == self.end_point
+                && let Some(point) = self.loop_point
+            {
+                self.index = point;
             }
             [convert(value)].into()
         } else {

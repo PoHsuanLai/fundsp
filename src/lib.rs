@@ -12,7 +12,7 @@
     clippy::type_complexity,
     clippy::float_cmp,
     clippy::len_zero,
-    clippy::double_neg,
+    double_negations,
     clippy::needless_range_loop,
     clippy::manual_range_contains,
     clippy::too_many_arguments,
@@ -72,6 +72,129 @@ pub const SIMD_C: usize = MAX_BUFFER_LOG - SIMD_S;
 /// The length of a buffer in SIMD elements.
 pub const SIMD_LEN: usize = MAX_BUFFER_SIZE / SIMD_N;
 
+/// The SIMD type for f64 block processing.
+pub type F64x = f64x4;
+
+/// The 32-bit signed integer SIMD element used for f64 index arithmetic.
+pub type I64x = i32x8;
+
+/// Abstraction over f32/f64 SIMD sample formats for block processing.
+///
+/// This trait defines the SIMD geometry for a sample format, allowing
+/// buffers and audio traits to be generic over f32 and f64 processing.
+pub trait Sample: Copy + Send + Sync + 'static {
+    /// The SIMD vector type (f32x8 or f64x4).
+    type Simd: Float;
+    /// The scalar type (f32 or f64).
+    type Scalar: Real;
+
+    /// Log2 of SIMD lane count.
+    const S: usize;
+    /// SIMD lane count (8 for f32, 4 for f64).
+    const N: usize;
+    /// Lane mask (N - 1).
+    const M: usize;
+    /// Left shift for converting from channel number to SIMD index (MAX_BUFFER_LOG - S).
+    const C: usize;
+    /// SIMD elements per 64-sample channel buffer.
+    const LEN: usize;
+
+    /// Construct a SIMD vector from a function that produces each lane value.
+    fn simd_from_fn(f: impl FnMut(usize) -> Self::Scalar) -> Self::Simd;
+
+    /// The SIMD zero value.
+    fn simd_zero() -> Self::Simd;
+
+    /// The scalar zero value.
+    fn scalar_zero() -> Self::Scalar;
+
+    /// Get a lane value from a SIMD vector.
+    fn get_lane(simd: &Self::Simd, index: usize) -> Self::Scalar;
+
+    /// Set a lane value in a SIMD vector.
+    fn set_lane(simd: &mut Self::Simd, index: usize, value: Self::Scalar);
+}
+
+/// 32-bit float sample format for SIMD block processing.
+#[derive(Copy, Clone, Debug)]
+pub struct F32;
+
+impl Sample for F32 {
+    type Simd = f32x8;
+    type Scalar = f32;
+
+    const S: usize = 3;
+    const N: usize = 8;
+    const M: usize = 7;
+    const C: usize = MAX_BUFFER_LOG - 3; // 3
+    const LEN: usize = MAX_BUFFER_SIZE / 8; // 8
+
+    #[inline(always)]
+    fn simd_from_fn(f: impl FnMut(usize) -> f32) -> f32x8 {
+        f32x8::new(core::array::from_fn::<f32, 8, _>(f))
+    }
+
+    #[inline(always)]
+    fn simd_zero() -> f32x8 {
+        f32x8::ZERO
+    }
+
+    #[inline(always)]
+    fn scalar_zero() -> f32 {
+        0.0
+    }
+
+    #[inline(always)]
+    fn get_lane(simd: &f32x8, index: usize) -> f32 {
+        simd.as_array()[index]
+    }
+
+    #[inline(always)]
+    fn set_lane(simd: &mut f32x8, index: usize, value: f32) {
+        simd.as_mut_array()[index] = value;
+    }
+}
+
+/// 64-bit float sample format for SIMD block processing.
+#[derive(Copy, Clone, Debug)]
+pub struct F64;
+
+impl Sample for F64 {
+    type Simd = f64x4;
+    type Scalar = f64;
+
+    const S: usize = 2;
+    const N: usize = 4;
+    const M: usize = 3;
+    const C: usize = MAX_BUFFER_LOG - 2; // 4
+    const LEN: usize = MAX_BUFFER_SIZE / 4; // 16
+
+    #[inline(always)]
+    fn simd_from_fn(f: impl FnMut(usize) -> f64) -> f64x4 {
+        f64x4::new(core::array::from_fn::<f64, 4, _>(f))
+    }
+
+    #[inline(always)]
+    fn simd_zero() -> f64x4 {
+        f64x4::ZERO
+    }
+
+    #[inline(always)]
+    fn scalar_zero() -> f64 {
+        0.0
+    }
+
+    #[inline(always)]
+    fn get_lane(simd: &f64x4, index: usize) -> f64 {
+        simd.as_array()[index]
+    }
+
+    #[inline(always)]
+    fn set_lane(simd: &mut f64x4, index: usize, value: f64) {
+        simd.as_mut_array()[index] = value;
+    }
+}
+
 /// Convert amount from samples to (full or partial) SIMD elements.
 #[inline(always)]
 pub fn simd_items(samples: usize) -> usize {
@@ -82,6 +205,18 @@ pub fn simd_items(samples: usize) -> usize {
 #[inline(always)]
 pub fn full_simd_items(samples: usize) -> usize {
     samples >> SIMD_S
+}
+
+/// Convert amount from samples to (full or partial) SIMD elements for sample format `S`.
+#[inline(always)]
+pub fn simd_items_s<S: Sample>(samples: usize) -> usize {
+    (samples + S::M) >> S::S
+}
+
+/// Convert amount from samples to full SIMD elements for sample format `S`.
+#[inline(always)]
+pub fn full_simd_items_s<S: Sample>(samples: usize) -> usize {
+    samples >> S::S
 }
 
 /// Number abstraction that is also defined for SIMD items.
@@ -897,3 +1032,97 @@ pub mod read;
 
 #[cfg(all(feature = "std", feature = "fft"))]
 pub mod convolve;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn f32_sample_constants() {
+        assert_eq!(F32::S, 3);
+        assert_eq!(F32::N, 8);
+        assert_eq!(F32::M, 7);
+        assert_eq!(F32::C, 3);
+        assert_eq!(F32::LEN, 8);
+        // LEN * N == MAX_BUFFER_SIZE
+        assert_eq!(F32::LEN * F32::N, MAX_BUFFER_SIZE);
+    }
+
+    #[test]
+    fn f64_sample_constants() {
+        assert_eq!(F64::S, 2);
+        assert_eq!(F64::N, 4);
+        assert_eq!(F64::M, 3);
+        assert_eq!(F64::C, 4);
+        assert_eq!(F64::LEN, 16);
+        // LEN * N == MAX_BUFFER_SIZE
+        assert_eq!(F64::LEN * F64::N, MAX_BUFFER_SIZE);
+    }
+
+    #[test]
+    fn f32_backward_compat_constants() {
+        // Existing global constants must match F32 values.
+        assert_eq!(SIMD_S, F32::S);
+        assert_eq!(SIMD_N, F32::N);
+        assert_eq!(SIMD_M, F32::M);
+        assert_eq!(SIMD_C, F32::C);
+        assert_eq!(SIMD_LEN, F32::LEN);
+    }
+
+    #[test]
+    fn simd_from_fn_f32() {
+        let v = F32::simd_from_fn(|i| (i + 1) as f32);
+        for i in 0..8 {
+            assert_eq!(F32::get_lane(&v, i), (i + 1) as f32);
+        }
+    }
+
+    #[test]
+    fn simd_from_fn_f64() {
+        let v = F64::simd_from_fn(|i| (i + 10) as f64);
+        for i in 0..4 {
+            assert_eq!(F64::get_lane(&v, i), (i + 10) as f64);
+        }
+    }
+
+    #[test]
+    fn simd_set_get_lane_f32() {
+        let mut v = F32::simd_zero();
+        F32::set_lane(&mut v, 3, 42.0);
+        assert_eq!(F32::get_lane(&v, 3), 42.0);
+        assert_eq!(F32::get_lane(&v, 0), 0.0);
+    }
+
+    #[test]
+    fn simd_set_get_lane_f64() {
+        let mut v = F64::simd_zero();
+        F64::set_lane(&mut v, 2, 99.5);
+        assert_eq!(F64::get_lane(&v, 2), 99.5);
+        assert_eq!(F64::get_lane(&v, 0), 0.0);
+    }
+
+    #[test]
+    fn simd_items_s_matches_legacy() {
+        for samples in 0..=MAX_BUFFER_SIZE {
+            assert_eq!(simd_items_s::<F32>(samples), simd_items(samples));
+            assert_eq!(full_simd_items_s::<F32>(samples), full_simd_items(samples));
+        }
+    }
+
+    #[test]
+    fn simd_items_s_f64() {
+        // 0 samples => 0 SIMD items
+        assert_eq!(simd_items_s::<F64>(0), 0);
+        // 1..4 samples => 1 SIMD item (partial)
+        assert_eq!(simd_items_s::<F64>(1), 1);
+        assert_eq!(simd_items_s::<F64>(4), 1);
+        // 5 samples => 2 SIMD items
+        assert_eq!(simd_items_s::<F64>(5), 2);
+        // 64 samples => 16 SIMD items
+        assert_eq!(simd_items_s::<F64>(64), 16);
+        // Full items: 3 samples => 0 full items
+        assert_eq!(full_simd_items_s::<F64>(3), 0);
+        // Full items: 4 samples => 1 full item
+        assert_eq!(full_simd_items_s::<F64>(4), 1);
+    }
+}

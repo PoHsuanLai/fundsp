@@ -52,17 +52,17 @@ impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Syn
     /// - `voices`: number of parallel voices traced along a helix. For example, 16.
     /// - `beat_length`: length of 1 revolution along the helix in seconds. For example, 1 second.
     /// - `beats_per_cycle`: how many revolutions until the helix returns to its point of origin. For example, 8 or 16.
-    ///    The higher this number is, the more rhythmic it will sound, due to correlations between successive revolutions.
+    ///   The higher this number is, the more rhythmic it will sound, due to correlations between successive revolutions.
     /// - `texture_seed`: seed of the texture which is sampled to get data for grains.
     /// - `inner_radius`: inner radius of the helix. The first voice is at the inner radius. For example, 0.1.
     /// - `outer_radius`: outer radius of the helix. The last voice is at the outer radius. For example, 0.2.
     /// - `jitter`: amount of random jitter added to sample points on the helix. For example, 0.0 or 0.01.
     /// - `generator`: the generator function `f(t, b, v, x, y, z)` for grains. `t` is time in seconds
-    ///    and `b` is fractional beat number starting from zero. The rest of the parameters are in the range -1...1.
-    ///    `v` is a voice indicator and `x`, `y` and `z` are values obtained from our texture.
-    ///    The generator function returns the triple (grain length, envelope length, grain graph).
-    ///    Lengths are in seconds.
-    ///    For example, `|t, b, v, x, y, z| (0.06, 0.03, Box::new(sine_hz(xerp11(20.0, 4000.0, x)) * xerp11(0.0002, 0.02, y) >> pan(v * 0.5)))`.
+    ///   and `b` is fractional beat number starting from zero. The rest of the parameters are in the range -1...1.
+    ///   `v` is a voice indicator and `x`, `y` and `z` are values obtained from our texture.
+    ///   The generator function returns the triple (grain length, envelope length, grain graph).
+    ///   Lengths are in seconds.
+    ///   For example, `|t, b, v, x, y, z| (0.06, 0.03, Box::new(sine_hz(xerp11(20.0, 4000.0, x)) * xerp11(0.0002, 0.02, y) >> pan(v * 0.5)))`.
     pub fn new(
         outputs: usize,
         voices: usize,

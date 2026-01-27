@@ -3,7 +3,7 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Default, Eq, PartialEq)]
 pub struct Path {
     path: Vec<u32>,
     index: usize,
@@ -12,10 +12,7 @@ pub struct Path {
 /// Path identifies a node in a generic tree of `AudioNode`s including the input or output index.
 impl Path {
     pub fn new() -> Self {
-        Self {
-            path: Vec::new(),
-            index: 0,
-        }
+        Self::default()
     }
     /// Add `suffix` to path.
     pub fn push(&mut self, suffix: u32) {
@@ -98,7 +95,7 @@ impl Node {
 }
 
 /// A tree of `AudioNode`s converted into a directed acyclic graph.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Graph {
     edges: Vec<Edge>,
     nodes: Vec<Node>,
@@ -106,10 +103,7 @@ pub struct Graph {
 
 impl Graph {
     pub fn new() -> Self {
-        Self {
-            edges: Vec::new(),
-            nodes: Vec::new(),
-        }
+        Self::default()
     }
 
     pub fn edges(&self) -> usize {

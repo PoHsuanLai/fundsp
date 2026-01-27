@@ -141,9 +141,9 @@ impl SlotBackend {
                     self.fade_time = fade_time;
                     self.fade = fade;
                 } else {
-                    if let Some(latest) = self.latest.take() {
-                        if self.sender.enqueue(SlotMessage::Return(latest)).is_ok() {}
-                    }
+                    if let Some(latest) = self.latest.take()
+                        && self.sender.enqueue(SlotMessage::Return(latest)).is_ok()
+                    {}
                     self.latest = Some(unit);
                     self.latest_fade = fade;
                     self.latest_fade_time = fade_time;
@@ -171,9 +171,9 @@ impl AudioUnit for SlotBackend {
         if let Some(mut latest) = self.latest.take() {
             core::mem::swap(&mut self.current, &mut latest);
             if self.sender.enqueue(SlotMessage::Return(latest)).is_ok() {}
-            if let Some(next) = self.next.take() {
-                if self.sender.enqueue(SlotMessage::Return(next)).is_ok() {}
-            }
+            if let Some(next) = self.next.take()
+                && self.sender.enqueue(SlotMessage::Return(next)).is_ok()
+            {}
         } else if let Some(mut next) = self.next.take() {
             core::mem::swap(&mut self.current, &mut next);
             if self.sender.enqueue(SlotMessage::Return(next)).is_ok() {}

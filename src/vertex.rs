@@ -126,9 +126,9 @@ impl Vertex {
     fn next_phase(&mut self, sender: &Option<Arc<Queue<NetReturn, 256>>>) {
         let mut next = self.next.unit.take().unwrap();
         core::mem::swap(&mut self.unit, &mut next);
-        if let Some(sender) = sender {
-            if sender.enqueue(NetReturn::Unit(next)).is_ok() {}
-        }
+        if let Some(sender) = sender
+            && sender.enqueue(NetReturn::Unit(next)).is_ok()
+        {}
         self.next.fade = self.latest.fade.clone();
         self.fade_phase = 0.0;
         self.next.fade_time = self.latest.fade_time;
@@ -232,11 +232,10 @@ impl Vertex {
     pub fn enqueue(&mut self, edit: &mut NodeEdit, sender: &Option<Arc<Queue<NetReturn, 256>>>) {
         if self.next.unit.is_some() {
             // Replace the latest unit.
-            if let Some(latest) = self.latest.unit.take() {
-                if let Some(sender) = sender {
-                    if sender.enqueue(NetReturn::Unit(latest)).is_ok() {}
-                }
-            }
+            if let Some(latest) = self.latest.unit.take()
+                && let Some(sender) = sender
+                && sender.enqueue(NetReturn::Unit(latest)).is_ok()
+            {}
             core::mem::swap(&mut self.latest, edit);
         } else {
             // Set the next unit.

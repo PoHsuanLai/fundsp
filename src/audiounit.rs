@@ -650,6 +650,52 @@ impl AudioUnit for BlockRateAdapter {
     }
 }
 
+/// Generic audio processor interface parameterized by sample format.
+///
+/// This trait mirrors `AudioUnit` but is generic over `Sample`, allowing
+/// both f32 and f64 block processing.
+///
+/// For f64 processing, implement this trait with `S = F64`.
+/// The existing `AudioUnit` trait remains the primary interface for f32 processing.
+pub trait GenericAudioUnit<S: Sample>: Send + Sync + DynClone {
+    /// Reset state.
+    fn reset_generic(&mut self) {}
+
+    /// Set the sample rate.
+    #[allow(unused_variables)]
+    fn set_sample_rate_generic(&mut self, sample_rate: f64) {}
+
+    /// Process one sample.
+    fn tick_generic(&mut self, input: &[S::Scalar], output: &mut [S::Scalar]);
+
+    /// Process up to 64 samples in SIMD blocks.
+    fn process_generic(&mut self, size: usize, input: &BufferRef<S>, output: &mut BufferMut<S>);
+
+    /// Set a parameter.
+    #[allow(unused_variables)]
+    fn set_generic(&mut self, setting: Setting) {}
+
+    /// Number of inputs.
+    fn inputs_generic(&self) -> usize;
+
+    /// Number of outputs.
+    fn outputs_generic(&self) -> usize;
+
+    /// Route signals.
+    fn route_generic(&mut self, input: &SignalFrame, frequency: f64) -> SignalFrame;
+
+    /// Return an ID code for this type of unit.
+    fn get_id_generic(&self) -> u64;
+
+    /// Memory footprint in bytes.
+    fn footprint_generic(&self) -> usize;
+
+    /// Preallocate memory.
+    fn allocate_generic(&mut self) {}
+}
+
+dyn_clone::clone_trait_object!(<S> GenericAudioUnit<S> where S: Sample);
+
 /// A dummy unit with zero output. It has an arbitrary number of inputs and outputs.
 /// `Net` uses this unit.
 #[derive(Clone)]

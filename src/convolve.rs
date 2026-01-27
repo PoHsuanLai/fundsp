@@ -37,7 +37,7 @@ impl AudioNode for Convolver {
     #[inline]
     fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         let mut output: Frame<f32, U1> = Frame::default();
-        self.convolver.process(&input, &mut output).unwrap();
+        self.convolver.process(input, &mut output).unwrap();
         output
     }
 

@@ -325,7 +325,7 @@ impl Clone for Sequencer {
             front: None,
             mode: self.mode.clone(),
             input_buffer: self.input_buffer.clone(),
-            loop_point: self.loop_point.clone(),
+            loop_point: self.loop_point,
             loop_input_buffer: self.loop_input_buffer.clone(),
             loop_output_buffer: self.loop_output_buffer.clone(),
         }
@@ -481,13 +481,13 @@ impl Sequencer {
     /// Commit all events and edits to the backend.
     pub fn commit(&mut self) {
         assert!(self.has_backend());
-        if self.commit_message.edits.len() > 0 {
-            if let Some((sender, _receiver)) = &mut self.front {
-                self.commit_message.edits.reverse();
-                let mut next_commit_message = SequencerMessage::default();
-                core::mem::swap(&mut next_commit_message, &mut self.commit_message);
-                if sender.enqueue(next_commit_message).is_ok() {}
-            }
+        if !self.commit_message.edits.is_empty()
+            && let Some((sender, _receiver)) = &mut self.front
+        {
+            self.commit_message.edits.reverse();
+            let mut next_commit_message = SequencerMessage::default();
+            core::mem::swap(&mut next_commit_message, &mut self.commit_message);
+            if sender.enqueue(next_commit_message).is_ok() {}
         }
     }
 
@@ -713,8 +713,11 @@ impl Sequencer {
                     if self.active.len() >= self.active.capacity() {
                         // Event dropped - no allocation in audio thread!
                         #[cfg(debug_assertions)]
-                        eprintln!("[FunDSP Sequencer] WARNING: Active event capacity ({}) exceeded, dropping event ID {:?}",
-                                  self.active.capacity(), ready.id);
+                        eprintln!(
+                            "[FunDSP Sequencer] WARNING: Active event capacity ({}) exceeded, dropping event ID {:?}",
+                            self.active.capacity(),
+                            ready.id
+                        );
                         continue;
                     }
 
@@ -845,9 +848,8 @@ impl AudioUnit for Sequencer {
 
     #[inline]
     fn tick(&mut self, input: &[f32], output: &mut [f32]) {
-        match self.mode {
-            ReplayMode::None => while let Some(_past) = self.past.pop() {},
-            _ => (),
+        if let ReplayMode::None = self.mode {
+            while let Some(_past) = self.past.pop() {}
         }
         for channel in 0..self.outputs {
             output[channel] = 0.0;
@@ -939,17 +941,16 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
-        if let ReplayMode::Loop(x) = self.replay_mode() {
-            if self.time >= *x {
-                self.reset();
-            }
+        if let ReplayMode::Loop(x) = self.replay_mode()
+            && self.time >= *x
+        {
+            self.reset();
         }
     }
 
     fn process(&mut self, size: usize, input: &BufferRef, output: &mut BufferMut) {
-        match self.mode {
-            ReplayMode::None => while let Some(_past) = self.past.pop() {},
-            _ => (),
+        if let ReplayMode::None = self.mode {
+            while let Some(_past) = self.past.pop() {}
         }
         for channel in 0..self.outputs {
             output.channel_mut(channel)[..simd_items(size)].fill(F32x::ZERO);

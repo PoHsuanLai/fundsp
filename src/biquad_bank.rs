@@ -84,14 +84,14 @@ where
     }
 
     fn set(&mut self, setting: Setting) {
-        if let Address::Index(index) = setting.direction() {
-            if let Parameter::Biquad(a1, a2, b0, b1, b2) = setting.parameter() {
-                self.coefs.a1.set(index, *a1);
-                self.coefs.a2.set(index, *a2);
-                self.coefs.b0.set(index, *b0);
-                self.coefs.b1.set(index, *b1);
-                self.coefs.b2.set(index, *b2);
-            }
+        if let Address::Index(index) = setting.direction()
+            && let Parameter::Biquad(a1, a2, b0, b1, b2) = setting.parameter()
+        {
+            self.coefs.a1.set(index, *a1);
+            self.coefs.a2.set(index, *a2);
+            self.coefs.b0.set(index, *b0);
+            self.coefs.b1.set(index, *b1);
+            self.coefs.b2.set(index, *b2);
         }
     }
 

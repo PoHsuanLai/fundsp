@@ -1003,12 +1003,7 @@ impl<F: Real> LinkwitzRileyLowpass<F> {
     pub fn new(order: LrOrder, cutoff: F) -> Self {
         let mut filter = Self {
             order,
-            biquads: [
-                Biquad::new(),
-                Biquad::new(),
-                Biquad::new(),
-                Biquad::new(),
-            ],
+            biquads: [Biquad::new(), Biquad::new(), Biquad::new(), Biquad::new()],
             sample_rate: F::from_f64(DEFAULT_SR),
             cutoff,
         };
@@ -1070,10 +1065,9 @@ impl<F: Real> AudioNode for LinkwitzRileyLowpass<F> {
             .coefs()
             .response(frequency / self.sample_rate.to_f64());
         for i in 1..self.order.stages() {
-            response = response
-                * self.biquads[i]
-                    .coefs()
-                    .response(frequency / self.sample_rate.to_f64());
+            response *= self.biquads[i]
+                .coefs()
+                .response(frequency / self.sample_rate.to_f64());
         }
         let mut output = SignalFrame::new(self.outputs());
         output.set(0, input.at(0).filter(0.0, |r| r * response));
@@ -1101,12 +1095,7 @@ impl<F: Real> LinkwitzRileyHighpass<F> {
     pub fn new(order: LrOrder, cutoff: F) -> Self {
         let mut filter = Self {
             order,
-            biquads: [
-                Biquad::new(),
-                Biquad::new(),
-                Biquad::new(),
-                Biquad::new(),
-            ],
+            biquads: [Biquad::new(), Biquad::new(), Biquad::new(), Biquad::new()],
             sample_rate: F::from_f64(DEFAULT_SR),
             cutoff,
         };
@@ -1167,10 +1156,9 @@ impl<F: Real> AudioNode for LinkwitzRileyHighpass<F> {
             .coefs()
             .response(frequency / self.sample_rate.to_f64());
         for i in 1..self.order.stages() {
-            response = response
-                * self.biquads[i]
-                    .coefs()
-                    .response(frequency / self.sample_rate.to_f64());
+            response *= self.biquads[i]
+                .coefs()
+                .response(frequency / self.sample_rate.to_f64());
         }
         let mut output = SignalFrame::new(self.outputs());
         output.set(0, input.at(0).filter(0.0, |r| r * response));
