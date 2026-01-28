@@ -18,7 +18,11 @@ use core::fmt::Write;
 
 /// An audio processor with an object safe interface.
 /// Once constructed, it has a fixed number of inputs and outputs.
-pub trait AudioUnit: Send + Sync + DynClone {
+///
+/// Generic over sample format `S`. The default `S = F32` means existing code
+/// using `AudioUnit` or `Box<dyn AudioUnit>` continues to work unchanged as f32.
+/// Use `AudioUnit<F64>` for native f64 processing.
+pub trait AudioUnit<S: Sample = F32>: Send + Sync + DynClone {
     /// Reset the input state of the unit to an initial state where it has not processed any data.
     /// In other words, reset time to zero.
     fn reset(&mut self) {
@@ -36,11 +40,11 @@ pub trait AudioUnit: Send + Sync + DynClone {
 
     /// Process one sample.
     /// The length of `input` and `output` must be equal to `inputs` and `outputs`, respectively.
-    fn tick(&mut self, input: &[f32], output: &mut [f32]);
+    fn tick(&mut self, input: &[S::Scalar], output: &mut [S::Scalar]);
 
     /// Process up to 64 (MAX_BUFFER_SIZE) samples.
     /// If `size` is zero then this is a no-op, which is permitted.
-    fn process(&mut self, size: usize, input: &BufferRef, output: &mut BufferMut);
+    fn process(&mut self, size: usize, input: &BufferRef<S>, output: &mut BufferMut<S>);
 
     /// Set a parameter. What formats are recognized depends on the component.
     #[allow(unused_variables)]
@@ -105,18 +109,18 @@ pub trait AudioUnit: Send + Sync + DynClone {
     /// assert_eq!(dc((3.0, 4.0)).get_mono(), 3.5);
     /// ```
     #[inline]
-    fn get_mono(&mut self) -> f32 {
+    fn get_mono(&mut self) -> S::Scalar {
         debug_assert!(self.inputs() == 0);
         match self.outputs() {
             1 => {
-                let mut output = [0.0];
+                let mut output = [S::scalar_zero()];
                 self.tick(&[], &mut output);
                 output[0]
             }
             2 => {
-                let mut output = [0.0, 0.0];
+                let mut output = [S::scalar_zero(); 2];
                 self.tick(&[], &mut output);
-                (output[0] + output[1]) * 0.5
+                (output[0] + output[1]) * S::Scalar::from_f64(0.5)
             }
             _ => panic!("AudioUnit::get_mono(): Unit must have 1 or 2 outputs"),
         }
@@ -133,16 +137,16 @@ pub trait AudioUnit: Send + Sync + DynClone {
     /// assert_eq!(dc(7.0).get_stereo(), (7.0, 7.0));
     /// ```
     #[inline]
-    fn get_stereo(&mut self) -> (f32, f32) {
+    fn get_stereo(&mut self) -> (S::Scalar, S::Scalar) {
         debug_assert!(self.inputs() == 0);
         match self.outputs() {
             1 => {
-                let mut output = [0.0];
+                let mut output = [S::scalar_zero()];
                 self.tick(&[], &mut output);
                 (output[0], output[0])
             }
             2 => {
-                let mut output = [0.0, 0.0];
+                let mut output = [S::scalar_zero(); 2];
                 self.tick(&[], &mut output);
                 (output[0], output[1])
             }
@@ -159,9 +163,9 @@ pub trait AudioUnit: Send + Sync + DynClone {
     /// assert_eq!(add(4.0).filter_mono(5.0), 9.0);
     /// ```
     #[inline]
-    fn filter_mono(&mut self, x: f32) -> f32 {
+    fn filter_mono(&mut self, x: S::Scalar) -> S::Scalar {
         debug_assert!(self.inputs() == 1 && self.outputs() == 1);
-        let mut output = [0.0];
+        let mut output = [S::scalar_zero()];
         self.tick(&[x], &mut output);
         output[0]
     }
@@ -175,9 +179,9 @@ pub trait AudioUnit: Send + Sync + DynClone {
     /// assert_eq!(add((2.0, 3.0)).filter_stereo(4.0, 5.0), (6.0, 8.0));
     /// ```
     #[inline]
-    fn filter_stereo(&mut self, x: f32, y: f32) -> (f32, f32) {
+    fn filter_stereo(&mut self, x: S::Scalar, y: S::Scalar) -> (S::Scalar, S::Scalar) {
         debug_assert!(self.inputs() == 2 && self.outputs() == 2);
-        let mut output = [0.0, 0.0];
+        let mut output = [S::scalar_zero(); 2];
         self.tick(&[x, y], &mut output);
         (output[0], output[1])
     }
@@ -362,7 +366,7 @@ pub trait AudioUnit: Send + Sync + DynClone {
     }
 }
 
-dyn_clone::clone_trait_object!(AudioUnit);
+dyn_clone::clone_trait_object!(<S> AudioUnit<S> where S: Sample);
 
 impl<X: AudioNode + Sync + Send> AudioUnit for An<X>
 where
@@ -649,52 +653,6 @@ impl AudioUnit for BlockRateAdapter {
         self.unit.allocate();
     }
 }
-
-/// Generic audio processor interface parameterized by sample format.
-///
-/// This trait mirrors `AudioUnit` but is generic over `Sample`, allowing
-/// both f32 and f64 block processing.
-///
-/// For f64 processing, implement this trait with `S = F64`.
-/// The existing `AudioUnit` trait remains the primary interface for f32 processing.
-pub trait GenericAudioUnit<S: Sample>: Send + Sync + DynClone {
-    /// Reset state.
-    fn reset_generic(&mut self) {}
-
-    /// Set the sample rate.
-    #[allow(unused_variables)]
-    fn set_sample_rate_generic(&mut self, sample_rate: f64) {}
-
-    /// Process one sample.
-    fn tick_generic(&mut self, input: &[S::Scalar], output: &mut [S::Scalar]);
-
-    /// Process up to 64 samples in SIMD blocks.
-    fn process_generic(&mut self, size: usize, input: &BufferRef<S>, output: &mut BufferMut<S>);
-
-    /// Set a parameter.
-    #[allow(unused_variables)]
-    fn set_generic(&mut self, setting: Setting) {}
-
-    /// Number of inputs.
-    fn inputs_generic(&self) -> usize;
-
-    /// Number of outputs.
-    fn outputs_generic(&self) -> usize;
-
-    /// Route signals.
-    fn route_generic(&mut self, input: &SignalFrame, frequency: f64) -> SignalFrame;
-
-    /// Return an ID code for this type of unit.
-    fn get_id_generic(&self) -> u64;
-
-    /// Memory footprint in bytes.
-    fn footprint_generic(&self) -> usize;
-
-    /// Preallocate memory.
-    fn allocate_generic(&mut self) {}
-}
-
-dyn_clone::clone_trait_object!(<S> GenericAudioUnit<S> where S: Sample);
 
 /// A dummy unit with zero output. It has an arbitrary number of inputs and outputs.
 /// `Net` uses this unit.
