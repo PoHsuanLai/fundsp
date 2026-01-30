@@ -28,7 +28,7 @@ pub fn generate_reverb(dna: &mut Dna) -> An<impl AudioNode<Inputs = U2, Outputs 
 }
 
 /// Attempt to measure the quality of a stereo reverb unit.
-pub fn reverb_fitness(reverb: An<impl AudioNode<Inputs = U2, Outputs = U2>>) -> f32 {
+pub fn reverb_fitness(reverb: An<impl AudioNode<Inputs = U2, Outputs = U2> + 'static>) -> f32 {
     let mut response = Wave::render(
         44100.0,
         32768.0 / 44100.0,

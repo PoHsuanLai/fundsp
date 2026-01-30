@@ -67,6 +67,14 @@ pub trait AudioUnit<S: Sample = F32>: Send + Sync + DynClone {
     /// Return an ID code for this type of unit.
     fn get_id(&self) -> u64;
 
+    /// Downcast this AudioUnit to `&dyn Any` for type inspection.
+    /// This enables safe runtime type checking and downcasting.
+    fn as_any(&self) -> &dyn core::any::Any;
+
+    /// Downcast this AudioUnit to `&mut dyn Any` for type inspection and mutation.
+    /// This enables safe runtime type checking and downcasting.
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any;
+
     /// Set unit pseudorandom phase hash. Override this to use the hash.
     /// This is called from `ping` (only). It should not be called by users.
     #[allow(unused_variables)]
@@ -368,7 +376,7 @@ pub trait AudioUnit<S: Sample = F32>: Send + Sync + DynClone {
 
 dyn_clone::clone_trait_object!(<S> AudioUnit<S> where S: Sample);
 
-impl<X: AudioNode + Sync + Send> AudioUnit for An<X>
+impl<X: AudioNode + Sync + Send + 'static> AudioUnit for An<X>
 where
     X::Inputs: Size<f32>,
     X::Outputs: Size<f32>,
@@ -407,6 +415,12 @@ where
     #[inline]
     fn get_id(&self) -> u64 {
         X::ID
+    }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
     }
     fn set_hash(&mut self, hash: u64) {
         self.0.set_hash(hash);
@@ -549,6 +563,12 @@ impl AudioUnit for BigBlockAdapter {
     fn get_id(&self) -> u64 {
         self.source.get_id()
     }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
+    }
     fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
         self.source.ping(probe, hash)
     }
@@ -640,6 +660,12 @@ impl AudioUnit for BlockRateAdapter {
     fn get_id(&self) -> u64 {
         self.unit.get_id()
     }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
+    }
     fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
         self.unit.ping(probe, hash)
     }
@@ -700,6 +726,12 @@ impl AudioUnit for DummyUnit {
     fn get_id(&self) -> u64 {
         const ID: u64 = 93;
         ID
+    }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
     }
 
     fn footprint(&self) -> usize {

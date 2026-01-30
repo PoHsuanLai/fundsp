@@ -142,6 +142,12 @@ impl AudioUnit for NetBackend {
     fn get_id(&self) -> u64 {
         self.net.get_id()
     }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
+    }
 
     fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
         self.handle_messages();

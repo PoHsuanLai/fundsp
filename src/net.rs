@@ -1371,6 +1371,12 @@ impl AudioUnit for Net {
     fn get_id(&self) -> u64 {
         ID
     }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
+    }
 
     fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
         let mut hash = hash.hash(ID);

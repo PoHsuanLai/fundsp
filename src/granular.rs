@@ -44,7 +44,7 @@ pub struct Granular<
     rnd: Rnd,
 }
 
-impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Sync + Send + Clone>
+impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Sync + Send + Clone + 'static>
     Granular<X>
 {
     /// Create a new granular synthesizer.
@@ -175,7 +175,7 @@ impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Syn
     }
 }
 
-impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Sync + Send + Clone>
+impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Sync + Send + Clone + 'static>
     AudioUnit for Granular<X>
 {
     fn reset(&mut self) {
@@ -207,6 +207,12 @@ impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Syn
     fn get_id(&self) -> u64 {
         const ID: u64 = 72;
         ID
+    }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
     }
 
     fn set_hash(&mut self, hash: u64) {

@@ -287,6 +287,12 @@ impl AudioUnit for SlotBackend {
         const ID: u64 = 78;
         ID
     }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
+    }
 
     fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
         if !probe {

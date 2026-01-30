@@ -446,6 +446,12 @@ impl AudioUnit for FeedbackUnit {
         const ID: u64 = 79;
         ID
     }
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
+    }
 
     fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
         self.x.ping(probe, hash.hash(self.get_id()))
