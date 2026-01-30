@@ -143,7 +143,8 @@ impl SlotBackend {
                 } else {
                     if let Some(latest) = self.latest.take()
                         && self.sender.enqueue(SlotMessage::Return(latest)).is_ok()
-                    {}
+                    {
+                    }
                     self.latest = Some(unit);
                     self.latest_fade = fade;
                     self.latest_fade_time = fade_time;
@@ -152,7 +153,7 @@ impl SlotBackend {
         }
     }
     /// We have faded to the next unit, now start fading to the latest unit, if any.
-    #[allow(clippy::needless_if)]
+    #[allow(clippy::needless_ifs)]
     fn next_phase(&mut self) {
         let mut next = self.next.take().unwrap();
         core::mem::swap(&mut self.current, &mut next);
@@ -165,7 +166,7 @@ impl SlotBackend {
 }
 
 impl AudioUnit for SlotBackend {
-    #[allow(clippy::needless_if)]
+    #[allow(clippy::needless_ifs)]
     fn reset(&mut self) {
         // Adopt the latest configuration and reset the unit.
         if let Some(mut latest) = self.latest.take() {

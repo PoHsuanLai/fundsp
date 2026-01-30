@@ -1,13 +1,13 @@
 [package]
-name = "fundsp"
-description = "Audio processing and synthesis library."
+name = "fundsp-tutti"
+description = "Audio processing and synthesis library (Tutti fork with custom modifications)."
 keywords = ["dsp", "audio", "synthesizer", "sound", "no_std"]
 categories = ["multimedia::audio", "no-std"]
 license = "MIT OR Apache-2.0"
 version = "0.23.0"
 authors = ["SamiPerttu <Sami.Perttu@gmail.com>"]
-homepage = "https://github.com/SamiPerttu/fundsp"
-repository = "https://github.com/SamiPerttu/fundsp"
+homepage = "https://github.com/PoHsuanLai/fundsp"
+repository = "https://github.com/PoHsuanLai/fundsp"
 readme = "README.md"
 edition = "2024"
 

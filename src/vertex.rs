@@ -122,7 +122,7 @@ impl Vertex {
     }
 
     /// We have faded to the next unit, now start fading to the latest unit, if any.
-    #[allow(clippy::needless_if)]
+    #[allow(clippy::needless_ifs)]
     fn next_phase(&mut self, sender: &Option<Arc<Queue<NetReturn, 256>>>) {
         let mut next = self.next.unit.take().unwrap();
         core::mem::swap(&mut self.unit, &mut next);

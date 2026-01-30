@@ -125,7 +125,7 @@ impl AudioNode for SnoopBackend {
     }
 
     #[inline]
-    #[allow(clippy::needless_if)]
+    #[allow(clippy::needless_ifs)]
     fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         self.buffer.set(self.index, input[0]);
         self.index += 1;
@@ -136,7 +136,7 @@ impl AudioNode for SnoopBackend {
         *input
     }
 
-    #[allow(clippy::needless_if)]
+    #[allow(clippy::needless_ifs)]
     fn process(&mut self, size: usize, input: &BufferRef, output: &mut BufferMut) {
         output.channel_mut(0)[..simd_items(size)]
             .clone_from_slice(&input.channel(0)[..simd_items(size)]);

@@ -422,12 +422,10 @@ impl Net {
             }
             for vertex in 0..self.size() - 1 {
                 for channel in 0..self.vertex[vertex].inputs() {
-                    if let Port::Local(index, port) =
-                        self.vertex[vertex].source[channel].source
+                    if let Port::Local(index, port) = self.vertex[vertex].source[channel].source
                         && index == last_index
                     {
-                        self.vertex[vertex].source[channel].source =
-                            Port::Local(node_index, port);
+                        self.vertex[vertex].source[channel].source = Port::Local(node_index, port);
                     }
                 }
             }

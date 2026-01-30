@@ -44,8 +44,13 @@ pub struct Granular<
     rnd: Rnd,
 }
 
-impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Sync + Send + Clone + 'static>
-    Granular<X>
+impl<
+    X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>)
+        + Sync
+        + Send
+        + Clone
+        + 'static,
+> Granular<X>
 {
     /// Create a new granular synthesizer.
     /// - `outputs`: number of outputs.
@@ -175,8 +180,13 @@ impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Syn
     }
 }
 
-impl<X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>) + Sync + Send + Clone + 'static>
-    AudioUnit for Granular<X>
+impl<
+    X: Fn(f64, f32, f32, f32, f32, f32) -> (f32, f32, Box<dyn AudioUnit>)
+        + Sync
+        + Send
+        + Clone
+        + 'static,
+> AudioUnit for Granular<X>
 {
     fn reset(&mut self) {
         self.sequencer.reset();
