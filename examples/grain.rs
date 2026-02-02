@@ -3,7 +3,7 @@
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BufferSize, FromSample, SizedSample};
-use fundsp::prelude64::*;
+use fundsp_tutti::prelude64::*;
 use funutd::dna::*;
 
 fn main() {
@@ -174,7 +174,9 @@ where
 
     //let mut dna = Dna::new(37);
     let mut dna = Dna::new(102);
-    let mut c = Net::wrap(fundsp::generate::gen_granular(2, &scale, 2.4, 30, &mut dna));
+    let mut c = Net::wrap(fundsp_tutti::generate::gen_granular(
+        2, &scale, 2.4, 30, &mut dna,
+    ));
 
     for parameter in dna.parameter_vector().iter() {
         println!("{}: {}", parameter.name(), parameter.value());

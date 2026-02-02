@@ -4,7 +4,7 @@
 use assert_no_alloc::*;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BufferSize, FromSample, SizedSample};
-use fundsp::prelude64::*;
+use fundsp_tutti::prelude64::*;
 use funutd::*;
 
 #[cfg(debug_assertions)] // required when disable_release is set (default)

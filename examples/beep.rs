@@ -4,7 +4,7 @@
 use assert_no_alloc::*;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BufferSize, FromSample, SizedSample};
-use fundsp::prelude64::*;
+use fundsp_tutti::prelude64::*;
 
 #[cfg(debug_assertions)] // required when disable_release is set (default)
 #[global_allocator]
@@ -84,7 +84,7 @@ where
 
     let c = c >> pan(0.0);
 
-    //let c = fundsp::sound::risset_glissando(false);
+    //let c = fundsp_tutti::sound::risset_glissando(false);
 
     // Add chorus.
     let c = c >> (chorus(0, 0.0, 0.01, 0.2) | chorus(1, 0.0, 0.01, 0.2));

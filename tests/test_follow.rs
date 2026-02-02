@@ -1,5 +1,5 @@
 //! Test the `follow` filter.
-use fundsp::prelude64::*;
+use fundsp_tutti::prelude64::*;
 use funutd::Rnd;
 
 #[allow(clippy::manual_range_contains)]

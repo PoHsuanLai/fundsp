@@ -11,8 +11,8 @@
     clippy::manual_range_contains
 )]
 
-use fundsp::audiounit::*;
-use fundsp::prelude64::*;
+use fundsp_tutti::audiounit::*;
+use fundsp_tutti::prelude64::*;
 use funutd::*;
 
 /// Check that the stereo generator given is rendered identically

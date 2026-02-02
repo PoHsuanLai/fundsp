@@ -14,7 +14,16 @@ use alloc::format;
 use alloc::vec::Vec;
 
 /// Generate a reverb unit.
-pub fn generate_reverb(dna: &mut Dna) -> An<impl AudioNode<Inputs = U2, Outputs = U2>> {
+///
+/// Note: Takes immutable reference to avoid capturing mutable lifetime in returned impl Trait.
+/// This is required for Rust 2024 edition compatibility. The caller should extract parameters
+/// from DNA before calling this function.
+pub fn generate_reverb(times: [f32; 32]) -> An<impl AudioNode<Inputs = U2, Outputs = U2>> {
+    super::prelude::reverb4_stereo_delays(times, 100.0)
+}
+
+/// Extract reverb delay times from DNA.
+pub fn extract_reverb_times(dna: &mut Dna) -> [f32; 32] {
     let mut times = [0.0; 32];
     for i in 0..32 {
         let name = format!("Delay {}", i);
@@ -24,7 +33,7 @@ pub fn generate_reverb(dna: &mut Dna) -> An<impl AudioNode<Inputs = U2, Outputs 
             times[i] = dna.f32_in(&name, 0.001, 0.030);
         }
     }
-    super::prelude::reverb4_stereo_delays(times, 100.0)
+    times
 }
 
 /// Attempt to measure the quality of a stereo reverb unit.

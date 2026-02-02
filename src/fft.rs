@@ -9,21 +9,21 @@ use num_complex::Complex32;
 /// Returns the slice transmuted into a slice of `Complex32`.
 pub fn real_fft(data: &mut [f32]) -> &mut [Complex32] {
     match data.len() {
-        2 => rfft_2(data.try_into().unwrap()).as_mut_slice(),
-        4 => rfft_4(data.try_into().unwrap()).as_mut_slice(),
-        8 => rfft_8(data.try_into().unwrap()).as_mut_slice(),
-        16 => rfft_16(data.try_into().unwrap()).as_mut_slice(),
-        32 => rfft_32(data.try_into().unwrap()).as_mut_slice(),
-        64 => rfft_64(data.try_into().unwrap()).as_mut_slice(),
-        128 => rfft_128(data.try_into().unwrap()).as_mut_slice(),
-        256 => rfft_256(data.try_into().unwrap()).as_mut_slice(),
-        512 => rfft_512(data.try_into().unwrap()).as_mut_slice(),
-        1024 => rfft_1024(data.try_into().unwrap()).as_mut_slice(),
-        2048 => rfft_2048(data.try_into().unwrap()).as_mut_slice(),
-        4096 => rfft_4096(data.try_into().unwrap()).as_mut_slice(),
-        8192 => rfft_8192(data.try_into().unwrap()).as_mut_slice(),
-        16384 => rfft_16384(data.try_into().unwrap()).as_mut_slice(),
-        32768 => rfft_32768(data.try_into().unwrap()).as_mut_slice(),
+        2 => rfft_2(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        4 => rfft_4(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        8 => rfft_8(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        16 => rfft_16(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        32 => rfft_32(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        64 => rfft_64(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        128 => rfft_128(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        256 => rfft_256(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        512 => rfft_512(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        1024 => rfft_1024(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        2048 => rfft_2048(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        4096 => rfft_4096(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        8192 => rfft_8192(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        16384 => rfft_16384(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
+        32768 => rfft_32768(data.try_into().expect("BUG: length checked by match")).as_mut_slice(),
         _ => panic!("invalid FFT length {}", data.len()),
     }
 }
@@ -51,49 +51,49 @@ pub fn fix_negative(data: &mut [Complex32]) {
 pub fn inverse_fft(data: &mut [Complex32]) {
     match data.len() {
         2 => {
-            ifft_2(data.try_into().unwrap());
+            ifft_2(data.try_into().expect("BUG: length checked by match"));
         }
         4 => {
-            ifft_4(data.try_into().unwrap());
+            ifft_4(data.try_into().expect("BUG: length checked by match"));
         }
         8 => {
-            ifft_8(data.try_into().unwrap());
+            ifft_8(data.try_into().expect("BUG: length checked by match"));
         }
         16 => {
-            ifft_16(data.try_into().unwrap());
+            ifft_16(data.try_into().expect("BUG: length checked by match"));
         }
         32 => {
-            ifft_32(data.try_into().unwrap());
+            ifft_32(data.try_into().expect("BUG: length checked by match"));
         }
         64 => {
-            ifft_64(data.try_into().unwrap());
+            ifft_64(data.try_into().expect("BUG: length checked by match"));
         }
         128 => {
-            ifft_128(data.try_into().unwrap());
+            ifft_128(data.try_into().expect("BUG: length checked by match"));
         }
         256 => {
-            ifft_256(data.try_into().unwrap());
+            ifft_256(data.try_into().expect("BUG: length checked by match"));
         }
         512 => {
-            ifft_512(data.try_into().unwrap());
+            ifft_512(data.try_into().expect("BUG: length checked by match"));
         }
         1024 => {
-            ifft_1024(data.try_into().unwrap());
+            ifft_1024(data.try_into().expect("BUG: length checked by match"));
         }
         2048 => {
-            ifft_2048(data.try_into().unwrap());
+            ifft_2048(data.try_into().expect("BUG: length checked by match"));
         }
         4096 => {
-            ifft_4096(data.try_into().unwrap());
+            ifft_4096(data.try_into().expect("BUG: length checked by match"));
         }
         8192 => {
-            ifft_8192(data.try_into().unwrap());
+            ifft_8192(data.try_into().expect("BUG: length checked by match"));
         }
         16384 => {
-            ifft_16384(data.try_into().unwrap());
+            ifft_16384(data.try_into().expect("BUG: length checked by match"));
         }
         32768 => {
-            ifft_32768(data.try_into().unwrap());
+            ifft_32768(data.try_into().expect("BUG: length checked by match"));
         }
         _ => panic!("invalid FFT length {}", data.len()),
     }

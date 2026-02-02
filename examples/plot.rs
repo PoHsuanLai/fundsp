@@ -1,6 +1,6 @@
 //! Plot ease_noise.png and fractal_noise.png for documentation.
 
-use fundsp::prelude32::*;
+use fundsp_tutti::prelude32::*;
 use plotters::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

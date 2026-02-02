@@ -1,7 +1,7 @@
 // This example utility "unscrambles" FunDSP type names reported from the compiler.
 //
 // For example,
-// cargo run --example type -- "An<Bus<Noise, Pipe<fundsp::audionode::Constant<typenum::uint::UInt<typenum::uint::UTerm, typenum::bit::B1>>, Sine>>>"
+// cargo run --example type -- "An<Bus<Noise, Pipe<fundsp_tutti::audionode::Constant<typenum::uint::UInt<typenum::uint::UTerm, typenum::bit::B1>>, Sine>>>"
 // prints
 // An<Bus<Noise, Pipe<Constant<U1>, Sine>>>
 
@@ -46,7 +46,7 @@ fn main() {
         .nth(1)
         .unwrap_or("You must provide a type.".to_string());
 
-    remove_string(&mut arg, "fundsp::");
+    remove_string(&mut arg, "fundsp_tutti::");
     remove_string(&mut arg, "audionode::");
     remove_string(&mut arg, "audiounit::");
     remove_string(&mut arg, "buffer::");

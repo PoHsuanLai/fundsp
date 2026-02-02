@@ -174,7 +174,7 @@ impl Net {
     ///
     /// ### Example (Sine Oscillator)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// net.chain(Box::new(sine()));
     /// net.check();
@@ -219,7 +219,7 @@ impl Net {
     ///
     /// ### Example (Sine Oscillator)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// let id = net.push(Box::new(sine()));
     /// net.pipe_input(id);
@@ -338,7 +338,7 @@ impl Net {
     ///
     /// ### Example (Sine Oscillator)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// let id1 = net.push(Box::new(sine()));
     /// let id2 = net.push(Box::new(sine()));
@@ -359,7 +359,7 @@ impl Net {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// let id1 = net.chain(Box::new(add(1.0)));
     /// let id2 = net.chain(Box::new(add(2.0)));
@@ -449,7 +449,7 @@ impl Net {
     ///
     /// ### Example (Replace Saw Wave With Square Wave)
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let mut net = Net::new(0, 1);
     /// let id = net.push(Box::new(saw_hz(220.0)));
     /// net.pipe_output(id);
@@ -474,7 +474,7 @@ impl Net {
     ///
     /// ### Example (Replace Saw Wave With Square Wave Via 1 Second Crossfade)
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let mut net = Net::new(0, 1);
     /// let id = net.push(Box::new(saw_hz(220.0)));
     /// net.pipe_output(id);
@@ -513,7 +513,7 @@ impl Net {
     ///
     /// ### Example (Filtered Saw Oscillator)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// let id1 = net.push(Box::new(saw()));
     /// let id2 = net.push(Box::new(lowpass_hz(1000.0, 1.0)));
@@ -539,7 +539,7 @@ impl Net {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// let id = net.chain(Box::new(pass()));
     /// assert!(net.filter_mono(1.0) == 1.0);
@@ -574,7 +574,7 @@ impl Net {
     ///
     /// ### Example (Saw Wave)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(1, 1);
     /// let id = net.push(Box::new(saw()));
     /// net.connect_input(0, id, 0);
@@ -611,7 +611,7 @@ impl Net {
     /// If there are no global inputs at all, then zeros are supplied.
     /// ### Example (Stereo Filter)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(2, 2);
     /// let id = net.push(Box::new(peak_hz(1000.0, 1.0) | peak_hz(1000.0, 1.0)));
     /// net.pipe_input(id);
@@ -675,7 +675,7 @@ impl Net {
     ///
     /// ### Example (Stereo Reverb)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(2, 2);
     /// let id = net.push(Box::new(multipass() & reverb_stereo(10.0, 1.0, 0.5)));
     /// net.pipe_input(id);
@@ -702,7 +702,7 @@ impl Net {
     ///
     /// ### Example (Stereo Pass-Through)
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let mut net = Net::new(2, 2);
     /// net.pass_through(0, 0);
     /// net.pass_through(1, 1);
@@ -722,7 +722,7 @@ impl Net {
     ///
     /// ### Example (Panned Sine Wave)
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let mut net = Net::new(0, 2);
     /// let id1 = net.push(Box::new(sine_hz(440.0)));
     /// let id2 = net.push(Box::new(pan(0.0)));
@@ -768,7 +768,7 @@ impl Net {
     ///
     /// ### Example (Lowpass And Highpass Filters In Series)
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let mut net = Net::new(1, 1);
     /// net.chain(Box::new(lowpass_hz(2000.0, 1.0)));
     /// net.chain(Box::new(highpass_hz(1000.0, 1.0)));
@@ -917,7 +917,7 @@ impl Net {
     ///
     /// ### Example (Conditional Processing)
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::wrap(Box::new(square_hz(440.0)));
     /// let add_filter = true;
     /// if add_filter {
@@ -953,7 +953,7 @@ impl Net {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let mut net = Net::scalar(2, 1.0);
     /// assert!(net.get_stereo() == (1.0, 1.0));
     /// ```
@@ -1079,7 +1079,7 @@ impl Net {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut net = Net::new(0, 1);
     /// net.chain(Box::new(dc(1.0)));
     /// let mut backend = net.backend();

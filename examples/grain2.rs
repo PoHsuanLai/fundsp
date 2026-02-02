@@ -3,8 +3,8 @@
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BufferSize, FromSample, SizedSample};
-use fundsp::generate::*;
-use fundsp::prelude64::*;
+use fundsp_tutti::generate::*;
+use fundsp_tutti::prelude64::*;
 use funutd::dna::*;
 
 fn main() {

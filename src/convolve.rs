@@ -15,13 +15,13 @@ impl Convolver {
         let mut convolver = FFTConvolver::<f32>::default();
         convolver
             .init(super::MAX_BUFFER_SIZE, response.channel(channel))
-            .unwrap();
+            .expect("FFTConvolver::init should not fail with valid parameters");
         Self { convolver }
     }
     pub fn set_response(&mut self, response: &Wave, channel: usize) {
         self.convolver
             .init(super::MAX_BUFFER_SIZE, response.channel(channel))
-            .unwrap();
+            .expect("FFTConvolver::init should not fail with valid parameters");
     }
 }
 
@@ -37,7 +37,9 @@ impl AudioNode for Convolver {
     #[inline]
     fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         let mut output: Frame<f32, U1> = Frame::default();
-        self.convolver.process(input, &mut output).unwrap();
+        self.convolver
+            .process(input, &mut output)
+            .expect("FFTConvolver::process should not fail in tick (RT-critical path)");
         output
     }
 
@@ -48,7 +50,7 @@ impl AudioNode for Convolver {
                     &input.channel_f32(0)[0..size],
                     &mut output.channel_f32_mut(0)[0..size],
                 )
-                .unwrap();
+                .expect("FFTConvolver::process should not fail in process (RT-critical path)");
         }
     }
 

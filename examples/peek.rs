@@ -1,5 +1,5 @@
 //! Show display method output.
-use fundsp::prelude64::*;
+use fundsp_tutti::prelude64::*;
 
 fn main() {
     let mut node = lowpass_hz(1000.0, 0.5);

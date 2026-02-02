@@ -32,7 +32,7 @@ impl Wave {
     ///
     /// ### Example: Create Stereo Wave
     /// ```
-    /// use fundsp::wave::*;
+    /// use fundsp_tutti::wave::*;
     /// let wave = Wave::new(2, 44100.0);
     /// ```
     pub fn new(channels: usize, sample_rate: f64) -> Self {
@@ -52,7 +52,7 @@ impl Wave {
     ///
     /// ### Example: Create (Empty) Stereo Wave With Capacity of 1 Second
     /// ```
-    /// use fundsp::wave::*;
+    /// use fundsp_tutti::wave::*;
     /// let wave = Wave::with_capacity(2, 44100.0, 44100);
     /// ```
     pub fn with_capacity(channels: usize, sample_rate: f64, capacity: usize) -> Self {
@@ -72,7 +72,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let wave = Wave::zero(1, 44100.0, 1.0);
     /// assert!(wave.duration() == 1.0 && wave.amplitude() == 0.0);
     /// ```
@@ -96,7 +96,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let wave = Wave::from_samples(44100.0, &[0.0; 22050]);
     /// assert!(wave.channels() == 1 && wave.duration() == 0.5 && wave.amplitude() == 0.0);
     /// ```
@@ -218,7 +218,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::new(2, 44100.0);
     /// wave.push(0.0);
     /// assert!(wave.len() == 1 && wave.amplitude() == 0.0);
@@ -259,7 +259,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let wave = Wave::new(1, 44100.0);
     /// assert!(wave.is_empty());
     /// ```
@@ -272,7 +272,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let wave = Wave::with_capacity(1, 44100.0, 44100);
     /// assert!(wave.duration() == 0.0);
     /// ```
@@ -286,7 +286,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::new(1, 44100.0);
     /// wave.resize(44100);
     /// assert!(wave.duration() == 1.0 && wave.amplitude() == 0.0);
@@ -321,7 +321,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::render(44100.0, 1.0, &mut (sine_hz(60.0)));
     /// let amplitude = wave.amplitude();
     /// assert!(amplitude >= 1.0 - 1.0e-5 && amplitude <= 1.0);
@@ -349,7 +349,7 @@ impl Wave {
     ///
     /// ### Example
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::render(44100.0, 1.0, &mut (sine_hz(60.0)));
     /// wave.normalize();
     /// assert!(wave.amplitude() == 1.0);
@@ -373,7 +373,7 @@ impl Wave {
     /// ### Example
     ///
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::render(44100.0, 10.0, &mut(white()));
     /// wave.fade_in(1.0);
     /// ```
@@ -394,7 +394,7 @@ impl Wave {
     /// ### Example
     ///
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::render(44100.0, 10.0, &mut(brown() | brown()));
     /// wave.fade_out(5.0);
     /// ```
@@ -417,7 +417,7 @@ impl Wave {
     /// ### Example
     ///
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let mut wave = Wave::render(44100.0, 10.0, &mut(pink() | pink()));
     /// wave.fade(1.0);
     /// ```
@@ -432,7 +432,7 @@ impl Wave {
     ///
     /// ### Example: Render 10 Seconds Of Stereo Brown Noise
     /// ```
-    /// use fundsp::prelude64::*;
+    /// use fundsp_tutti::prelude64::*;
     /// let wave = Wave::render(44100.0, 10.0, &mut (brown() | brown()));
     /// assert!(wave.sample_rate() == 44100.0 && wave.channels() == 2 && wave.duration() == 10.0);
     /// ```
@@ -469,7 +469,7 @@ impl Wave {
     ///
     /// ### Example: Render 10 Seconds Of Square-Like Wave With Look-Ahead Limiter
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let wave = Wave::render_latency(44100.0, 10.0, &mut (lfo(|t| (440.0, exp(-t))) >> dsf_square() >> limiter(0.5, 0.5)));
     /// assert!(wave.amplitude() <= 1.0 && wave.duration() == 10.0 && wave.sample_rate() == 44100.0);
     /// ```
@@ -506,7 +506,7 @@ impl Wave {
     ///
     /// ### Example: Reverberate A Square Wave
     /// ```
-    /// use fundsp::prelude32::*;
+    /// use fundsp_tutti::prelude32::*;
     /// let wave1 = Wave::render(44100.0, 1.0, &mut (lfo(|t| xerp11(215.0, 225.0, sin_hz(8.0, t))) >> square() >> pan(0.0)));
     /// assert!(wave1.channels() == 2 && wave1.duration() == 1.0);
     /// let mut processor = 0.2 * reverb_stereo(10.0, 1.0, 0.5) & multipass();

@@ -3,8 +3,8 @@
 #![allow(clippy::manual_range_contains)]
 #![allow(dead_code)]
 
-use fundsp::dynamics::*;
-use fundsp::prelude64::*;
+use fundsp_tutti::dynamics::*;
+use fundsp_tutti::prelude64::*;
 use funutd::*;
 
 #[test]

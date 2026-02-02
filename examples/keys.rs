@@ -6,7 +6,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BufferSize, FromSample, SizedSample};
 use eframe::egui;
 use egui::*;
-use fundsp::prelude64::*;
+use fundsp_tutti::prelude64::*;
 use funutd::Rnd;
 
 #[derive(Debug, PartialEq)]

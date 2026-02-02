@@ -3,8 +3,8 @@
 #![allow(unused_must_use)]
 #![allow(clippy::precedence)]
 
-use fundsp::prelude64::*;
-use fundsp::sound::*;
+use fundsp_tutti::prelude64::*;
+use fundsp_tutti::sound::*;
 use funutd::*;
 
 fn main() {
@@ -49,7 +49,7 @@ fn main() {
     /*
     let stab = move || {
         let bps = bpm / 60.0;
-        fundsp::sound::pebbles(14.0, 200)
+        fundsp_tutti::sound::pebbles(14.0, 200)
             * lfo(move |t| {
                 if t * bps - round(t * bps) > 0.0 && round(t * bps) < 32.0 {
                     0.1

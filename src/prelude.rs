@@ -183,7 +183,7 @@ pub type U128 = numeric_array::typenum::U128;
 ///
 /// ### Example: Sine Oscillator
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// constant(440.0) >> sine::<f64>();
 /// ```
 pub fn constant<X: ConstantFrame<Sample = f32>>(x: X) -> An<Constant<X::Size>>
@@ -200,7 +200,7 @@ where
 ///
 /// ### Example: Dual Sine Oscillator
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// dc((220.0, 440.0)) >> (sine::<f32>() + sine::<f32>());
 /// ```
 pub fn dc<X: ConstantFrame<Sample = f32>>(x: X) -> An<Constant<X::Size>>
@@ -215,7 +215,7 @@ where
 ///
 /// ### Example: Pluck Oscillator
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// zero() >> pluck(220.0, db_amp(-6.0), 0.5);
 /// ```
 pub fn zero() -> An<Constant<U1>> {
@@ -227,7 +227,7 @@ pub fn zero() -> An<Constant<U1>> {
 ///
 /// ### Example: Stereo Pluck Oscillator
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// multizero::<U2>() >> (pluck(220.0, db_amp(-6.0), 0.5) | pluck(220.0, db_amp(-6.0), 0.5));
 /// ```
 pub fn multizero<N: Size<f32>>() -> An<Constant<N>> {
@@ -251,7 +251,7 @@ pub fn update<X: AudioNode, F: FnMut(f32, f32, &mut X) + Clone + Send + Sync>(
 ///
 /// ### Example: Add Feedback Delay
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// pass() & 0.2 * feedback(delay(1.0) * db_amp(-3.0));
 /// ```
 pub fn pass() -> An<Pass> {
@@ -264,7 +264,7 @@ pub fn pass() -> An<Pass> {
 ///
 /// ### Example: Add Feedback Delay In Stereo
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// multipass::<U2>() & 0.2 * feedback((delay(1.0) | delay(1.0)) * db_amp(-3.0));
 /// ```
 pub fn multipass<N: Size<f32>>() -> An<MultiPass<N>> {
@@ -278,7 +278,7 @@ pub fn multipass<N: Size<f32>>() -> An<MultiPass<N>> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let rms = shared(0.0);
 /// monitor(&rms, Meter::Rms(0.1));
 /// ```
@@ -293,7 +293,7 @@ pub fn monitor(shared: &Shared, meter: Meter) -> An<Monitor> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// meter(Meter::Rms(0.1));
 /// ```
 pub fn meter(meter: Meter) -> An<MeterNode> {
@@ -318,7 +318,7 @@ pub fn multisink<N: Size<f32>>() -> An<Sink<N>> {
 ///
 /// ### Example: Ping-Pong Delay
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// feedback::<U2, _>((delay(1.0) | delay(1.0)) >> reverse() * db_amp(-3.0));
 /// ```
 pub fn reverse<N: Size<f32>>() -> An<Reverse<N>> {
@@ -331,7 +331,7 @@ pub fn reverse<N: Size<f32>>() -> An<Reverse<N>> {
 ///
 /// ### Example: Vibrato
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// lfo(|t| 110.0 + lerp11(-2.0, 2.0, sin_hz(t, 5.0))) >> sine::<f64>();
 /// ```
 pub fn sine<F: Real>() -> An<Sine<F>> {
@@ -343,7 +343,7 @@ pub fn sine<F: Real>() -> An<Sine<F>> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// sine_hz::<f32>(440.0);
 /// ```
 pub fn sine_hz<F: Real>(f: f32) -> An<Pipe<Constant<U1>, Sine<F>>> {
@@ -369,7 +369,7 @@ pub fn ramp_hz<F: Float>(f: f32) -> An<Pipe<Constant<U1>, Ramp<F>>> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// lfo(|t| 440.0 + 10.0 * sin_hz(6.0, t)) >> rossler();
 /// ```
 pub fn rossler() -> An<Rossler> {
@@ -382,7 +382,7 @@ pub fn rossler() -> An<Rossler> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// lfo(|t| 110.0 + 5.0 * sin_hz(5.0, t)) >> lorenz();
 /// ```
 pub fn lorenz() -> An<Lorenz> {
@@ -435,7 +435,7 @@ where
 ///
 /// ### Example: Filtered Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (noise() | dc(1000.0)) >> butterpass::<f32>();
 /// ```
 pub fn butterpass<F: Real>() -> An<ButterLowpass<F, U2>> {
@@ -504,7 +504,7 @@ pub fn lr_crossover<F: Real>(order: LrOrder, f: F) -> An<LinkwitzRileyCrossover<
 ///
 /// ### Example: Brown Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (noise() | dc(10.0)) >> lowpole::<f32>();
 /// ```
 pub fn lowpole<F: Real>() -> An<Lowpole<F, U2>> {
@@ -517,7 +517,7 @@ pub fn lowpole<F: Real>() -> An<Lowpole<F, U2>> {
 ///
 /// ### Example: Brown Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// noise() >> lowpole_hz::<f32>(10.0);
 /// ```
 pub fn lowpole_hz<F: Real>(cutoff: F) -> An<Lowpole<F, U1>> {
@@ -562,7 +562,7 @@ pub fn highpole_hz<F: Real>(cutoff: F) -> An<Highpole<F, U1>> {
 ///
 /// ### Example: Filtered Noise Tone
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (noise() | dc((440.0, 10.0))) >> resonator::<f64>();
 /// ```
 pub fn resonator<F: Real>() -> An<Resonator<F, U3>> {
@@ -575,7 +575,7 @@ pub fn resonator<F: Real>() -> An<Resonator<F, U3>> {
 ///
 /// ### Example: Filtered Noise Tone
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// noise() >> resonator_hz::<f64>(440.0, 10.0);
 /// ```
 pub fn resonator_hz<F: Real>(center: F, q: F) -> An<Resonator<F, U1>> {
@@ -622,7 +622,7 @@ pub fn moog_hz<F: Real>(frequency: F, q: F) -> An<Moog<F, U1>> {
 ///
 /// ### Example: Mixing Pink And Brown Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// envelope(|t| (sin_hz(1.0, t), cos_hz(1.0, t))) * (pink::<f32>() | brown::<f32>()) >> join();
 /// ```
 pub fn envelope<F, E, R>(f: E) -> An<Envelope<F, E, R>>
@@ -646,7 +646,7 @@ where
 ///
 /// ### Example: Exponentially Decaying White Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// lfo(|t: f32| exp(-t)) * white();
 /// ```
 pub fn lfo<F, E, R>(f: E) -> An<Envelope<F, E, R>>
@@ -667,7 +667,7 @@ where
 ///
 /// ### Example (LFO Speed Control)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let speed = shared(1.0);
 /// var(&speed) >> envelope2(|t: f32, speed: f32| exp(-t * speed));
 /// ```
@@ -694,7 +694,7 @@ where
 ///
 /// ### Example (Amplitude Control)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let amp = shared(1.0);
 /// var(&amp) >> lfo2(|t: f32, amp: f32| amp * exp(-t));
 /// ```
@@ -743,7 +743,7 @@ where
 ///
 /// ### Example (Clamped Sine)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let min = shared(-1.0);
 /// let max = shared(1.0);
 /// (var(&min) | var(&max)) >> lfo3(|t, min, max| clamp(min, max, sin_hz(110.0, t)));
@@ -825,7 +825,7 @@ pub fn adsr_live(
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// mls_bits(31);
 /// ```
 pub fn mls_bits(n: u64) -> An<Mls> {
@@ -837,7 +837,7 @@ pub fn mls_bits(n: u64) -> An<Mls> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// mls();
 /// ```
 pub fn mls() -> An<Mls> {
@@ -850,7 +850,7 @@ pub fn mls() -> An<Mls> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// noise();
 /// ```
 pub fn noise() -> An<Noise> {
@@ -863,7 +863,7 @@ pub fn noise() -> An<Noise> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// white();
 /// ```
 pub fn white() -> An<Noise> {
@@ -877,7 +877,7 @@ pub fn white() -> An<Noise> {
 ///
 /// ### Example (Sampled And Held Noise)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (pink::<f64>() | dc(440.0)) >> hold(0.5);
 /// ```
 pub fn hold(variability: f32) -> An<Hold> {
@@ -897,7 +897,7 @@ pub fn hold_hz(f: f32, variability: f32) -> An<Pipe<Stack<Pass, Constant<U1>>, H
 ///
 /// ### Example: 3-Point Lowpass Filter
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// fir(Frame::<f32, _>::from([0.5, 1.0, 0.5]));
 /// ```
 pub fn fir<X: ConstantFrame<Sample = f32>>(weights: X) -> An<Fir<X::Size>> {
@@ -920,7 +920,7 @@ pub fn fir3(gain: f32) -> An<Fir<U3>> {
 ///
 /// ### Example: 2-Point Sum Filter
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// tick() & pass();
 /// ```
 pub fn tick() -> An<Tick<U1>> {
@@ -933,7 +933,7 @@ pub fn tick() -> An<Tick<U1>> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// multitick::<U2>();
 /// ```
 pub fn multitick<N: Size<f32>>() -> An<Tick<N>> {
@@ -948,7 +948,7 @@ pub fn multitick<N: Size<f32>>() -> An<Tick<N>> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// delay(1.0);
 /// ```
 pub fn delay(t: f64) -> An<Delay> {
@@ -965,7 +965,7 @@ pub fn delay(t: f64) -> An<Delay> {
 ///
 /// ### Example: Variable Delay
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// pass() & (pass() | lfo(|t| lerp11(0.01, 0.1, spline_noise(0, t)))) >> tap(0.01, 0.1);
 /// ```
 pub fn tap(min_delay: f32, max_delay: f32) -> An<Tap<U1>> {
@@ -983,7 +983,7 @@ pub fn tap(min_delay: f32, max_delay: f32) -> An<Tap<U1>> {
 ///
 /// ### Example: Dual Variable Delay
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (pass() | lfo(|t| (lerp11(0.01, 0.1, spline_noise(0, t)), lerp11(0.1, 0.2, spline_noise(1, t))))) >> multitap::<U2>(0.01, 0.2);
 /// ```
 pub fn multitap<N>(min_delay: f32, max_delay: f32) -> An<Tap<N>>
@@ -1003,7 +1003,7 @@ where
 ///
 /// ### Example: Variable Delay
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// pass() & (pass() | lfo(|t| lerp11(0.01, 0.1, spline_noise(0, t)))) >> tap_linear(0.01, 0.1);
 /// ```
 pub fn tap_linear(min_delay: f32, max_delay: f32) -> An<TapLinear<U1>> {
@@ -1020,7 +1020,7 @@ pub fn tap_linear(min_delay: f32, max_delay: f32) -> An<TapLinear<U1>> {
 ///
 /// ### Example: Dual Variable Delay
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (pass() | lfo(|t| (lerp11(0.01, 0.1, spline_noise(0, t)), lerp11(0.1, 0.2, spline_noise(1, t))))) >> multitap_linear::<U2>(0.01, 0.2);
 /// ```
 pub fn multitap_linear<N>(min_delay: f32, max_delay: f32) -> An<TapLinear<N>>
@@ -1036,7 +1036,7 @@ where
 ///
 /// ### Example: Oversampled FM Oscillator
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let f: f32 = 440.0;
 /// let m: f32 = 1.0;
 /// oversample(sine_hz::<f32>(f) * f * m + f >> sine::<f32>());
@@ -1076,7 +1076,7 @@ where
 ///
 /// ### Example: Resampled Pink Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// lfo(|t: f64| xerp11(0.5, 2.0, spline_noise(1, t))) >> resample(pink::<f64>());
 /// ```
 pub fn resample<X>(node: An<X>) -> An<Resample<X>>
@@ -1095,7 +1095,7 @@ where
 ///
 /// ### Example: Feedback Delay With Lowpass
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// pass() & feedback(delay(1.0) >> lowpass_hz::<f64>(1000.0, 1.0));
 /// ```
 pub fn feedback<N, X>(node: An<X>) -> An<Feedback<N, X, FrameId<N>>>
@@ -1116,7 +1116,7 @@ where
 ///
 /// ### Example: Feedback Delay With Lowpass
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// pass() & feedback2(delay(1.0), lowpass_hz::<f32>(1000.0, 1.0));
 /// ```
 pub fn feedback2<N, X, Y>(node: An<X>, loopback: An<Y>) -> An<Feedback2<N, X, Y, FrameId<N>>>
@@ -1144,7 +1144,7 @@ where
 ///
 /// ### Example: Schroeder Allpass
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// allnest_c(0.5, delay(0.01));
 /// ```
 pub fn allnest_c<X>(coefficient: f32, x: An<X>) -> An<AllNest<U1, X>>
@@ -1167,7 +1167,7 @@ where
 ///
 /// ### Example: Schroeder Allpass
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// allnest(delay(0.01));
 /// ```
 pub fn allnest<X>(x: An<X>) -> An<AllNest<U2, X>>
@@ -1181,7 +1181,7 @@ where
 ///
 /// ### Example: Max Operator
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// map(|i: &Frame<f32, U2>| max(i[0], i[1]));
 /// ```
 pub fn map<M, I, O>(f: M) -> An<Map<M, I, O>>
@@ -1202,7 +1202,7 @@ where
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// dcblock_hz::<f64>(8.0);
 /// ```
 pub fn dcblock_hz<F: Real>(cutoff: F) -> An<DCBlock<F>> {
@@ -1215,7 +1215,7 @@ pub fn dcblock_hz<F: Real>(cutoff: F) -> An<DCBlock<F>> {
 ///
 /// ### Example: Stereo DC Blocker
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// dcblock::<f32>() | dcblock::<f32>();
 /// ```
 pub fn dcblock<F: Real>() -> An<DCBlock<F>> {
@@ -1249,7 +1249,7 @@ pub fn shape_fn<S: Fn(f32) -> f32 + Clone + Send + Sync>(f: S) -> An<Shaper<Shap
 ///
 /// ### Example: Tanh Distortion
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// shape(Tanh(1.0));
 /// ```
 pub fn shape<S: Shape>(mode: S) -> An<Shaper<S>> {
@@ -1278,7 +1278,7 @@ pub fn clip_to(minimum: f32, maximum: f32) -> An<Shaper<ClipTo>> {
 ///
 /// ### Example: Panning Noise
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// (noise() | sine_hz::<f64>(0.5)) >> panner();
 /// ```
 pub fn panner() -> An<Panner<U2>> {
@@ -1292,7 +1292,7 @@ pub fn panner() -> An<Panner<U2>> {
 ///
 /// ### Example (Center Panned Saw Wave)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// saw_hz(440.0) >> pan(0.0);
 /// ```
 pub fn pan(pan: f32) -> An<Panner<U1>> {
@@ -1305,7 +1305,7 @@ pub fn pan(pan: f32) -> An<Panner<U1>> {
 ///
 /// ### Example (Smoothed Atomic Parameter)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let parameter = shared(1.0);
 /// var(&parameter) >> follow(0.01);
 /// ```
@@ -1320,7 +1320,7 @@ pub fn follow<F: Real>(response_time: F) -> An<Follow<F>> {
 ///
 /// ### Example (Smoothed Atomic Parameter)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let parameter = shared(1.0);
 /// var(&parameter) >> afollow(0.01, 0.02);
 /// ```
@@ -1378,7 +1378,7 @@ pub fn brown<F: Real>() -> An<Pipe<Noise, Binop<FrameMul<U1>, Lowpole<F, U1>, Co
 ///
 /// *** Example: Mono Reverb
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// split() >> fdn::<U16, _>(stacki::<U16, _, _>(|i| { delay(lerp(0.01, 0.03, rnd1(i))) >> fir((0.2, 0.4, 0.2)) })) >> join();
 /// ```
 pub fn fdn<N, X>(x: An<X>) -> An<Feedback<N, X, FrameHadamard<N>>>
@@ -1429,7 +1429,7 @@ where
 ///
 /// ### Example (Sine Bundle)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// busi::<U20, _, _>(|i| sine_hz::<f32>(110.0 * exp(lerp(-0.2, 0.2, rnd2(i) as f32))));
 /// ```
 pub fn busi<N, X, F>(f: F) -> An<MultiBus<N, X>>
@@ -1452,7 +1452,7 @@ where
 ///
 /// ### Example (Noise Bundle)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// busf::<U20, _, _, f32>(|t| (noise() | dc((xerp(100.0, 1000.0, t), 20.0))) >> !resonator::<f32>() >> resonator::<f32>());
 /// ```
 pub fn busf<N, X, Y, F>(f: Y) -> An<MultiBus<N, X>>
@@ -1774,7 +1774,7 @@ where
 ///
 /// ### Example: Add 20% Reverb
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// multipass() & 0.2 * reverb_stereo(10.0, 5.0, 0.5);
 /// ```
 pub fn reverb_stereo(
@@ -1825,7 +1825,7 @@ pub fn reverb_stereo(
 ///
 /// ### Example: Add 20% Reverb
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// multipass() & 0.2 * reverb2_stereo(10.0, 1.0, 0.5, 1.0, lowpole_hz::<f32>(8000.0));
 /// ```
 pub fn reverb2_stereo(
@@ -1900,7 +1900,7 @@ pub fn reverb2_stereo(
 ///
 /// ### Example: Add 25% Reverb
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// multipass() & 0.25 * reverb3_stereo(2.0, 0.5, lowpole_hz::<f32>(8000.0));
 /// ```
 pub fn reverb3_stereo(
@@ -2033,7 +2033,7 @@ pub fn dsf_square_r(roughness: f32) -> An<Dsf<U1>> {
 ///
 /// ### Example
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let node = zero() >> pluck(440.0, 0.5, 1.0);
 /// ```
 pub fn pluck(frequency: f32, gain_per_second: f32, high_frequency_damping: f32) -> An<Pluck> {
@@ -2711,7 +2711,7 @@ pub fn playwave_at(
 ///
 /// ### Example: Chorused Saw Wave
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// saw_hz(110.0) >> chorus(0, 0.015, 0.005, 0.5);
 /// ```
 pub fn chorus(
@@ -2761,7 +2761,7 @@ pub fn chorus(
 ///
 /// ### Example: Flanged Saw Wave
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// saw_hz(110.0) >> flanger(0.5, 0.005, 0.010, |t| lerp11(0.005, 0.010, sin_hz(0.1, t)));
 /// ```
 pub fn flanger<X: Fn(f32) -> f32 + Clone + Send + Sync>(
@@ -2785,7 +2785,7 @@ pub fn flanger<X: Fn(f32) -> f32 + Clone + Send + Sync>(
 ///
 /// ### Example: Phased Saw Wave
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// saw_hz(110.0) >> phaser(0.5, |t| sin_hz(0.1, t) * 0.5 + 0.5);
 /// ```
 pub fn phaser<X: Fn(f32) -> f32 + Clone + Send + Sync>(
@@ -2804,7 +2804,7 @@ pub fn phaser<X: Fn(f32) -> f32 + Clone + Send + Sync>(
 ///
 /// ### Example: Add Chorus With Wetness Control
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let wet = shared(0.2);
 /// pass() & var(&wet) * chorus(0, 0.015, 0.005, 0.5);
 /// ```
@@ -2818,7 +2818,7 @@ pub fn shared(value: f32) -> Shared {
 ///
 /// ### Example: Add Chorus With Wetness Control
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let wet = shared(0.2);
 /// pass() & var(&wet) * chorus(0, 0.015, 0.005, 0.5);
 /// ```
@@ -2833,7 +2833,7 @@ pub fn var(shared: &Shared) -> An<Var> {
 ///
 /// ### Example: Control Pitch In MIDI Semitones With Smoothing
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let pitch = shared(69.0);
 /// var_fn(&pitch, |x| midi_hz(x)) >> follow(0.01) >> saw();
 /// ```
@@ -2852,7 +2852,7 @@ where
 ///
 /// ### Example: Timer And LFO
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let time = shared(0.0);
 /// timer(&time) | lfo(|t: f32| 1.0 / (1.0 + t));
 /// ```
@@ -2885,7 +2885,7 @@ pub fn snoop(capacity: usize) -> (Snoop, An<SnoopBackend>) {
 ///
 /// ### Example: FFT Brickwall Lowpass Filter
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// let cutoff = 1000.0;
 /// let synth = resynth::<U1, U1, _>(1024, |fft|
 ///     for i in 0..fft.bins() {
@@ -2918,7 +2918,7 @@ pub fn impulse<N: Size<f32>>() -> An<Impulse<N>> {
 ///
 /// ### Example (45 Degree Rotation)
 /// ```
-/// use fundsp::prelude::*;
+/// use fundsp_tutti::prelude::*;
 /// rotate(f32::PI / 4.0, 1.0);
 /// ```
 pub fn rotate(angle: f32, gain: f32) -> An<Mixer<U2, U2>> {

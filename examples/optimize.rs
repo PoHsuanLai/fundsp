@@ -1,7 +1,7 @@
 //! Failed experiment to optimize a stereo reverb. WIP.
 //! Please run me in release mode!
 
-use fundsp::prelude32::*;
+use fundsp_tutti::prelude32::*;
 use funutd::dna::*;
 use funutd::*;
 use rayon::prelude::*;
@@ -17,7 +17,10 @@ fn specimen(dna: Dna, fitness: f32) -> Specimen {
 
 /// Evaluate reverb quality from its genotype.
 fn evaluate_reverb(dna: &mut Dna) -> f32 {
-    let reverb = generate_reverb(dna);
+    // Extract times from DNA (mutates DNA to register parameters)
+    let times = extract_reverb_times(dna);
+    // Generate reverb from times (no lifetime capture)
+    let reverb = generate_reverb(times);
     // Prevent cases where two lines have nearly the same length.
     let repeat_weight = 0.0;
     let mut repeat_fitness = reverb_fitness(reverb);
