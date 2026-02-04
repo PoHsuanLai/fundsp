@@ -437,6 +437,27 @@ impl Wave {
     /// assert!(wave.sample_rate() == 44100.0 && wave.channels() == 2 && wave.duration() == 10.0);
     /// ```
     pub fn render(sample_rate: f64, duration: f64, node: &mut dyn AudioUnit) -> Self {
+        Self::render_with_progress(sample_rate, duration, node, |_| {})
+    }
+
+    /// Render wave with length `duration` seconds from generator `node`,
+    /// calling `on_progress` with progress (0.0 to 1.0) periodically.
+    /// Sets the sample rate of `node`.
+    /// Does not discard pre-delay.
+    ///
+    /// ### Example: Render With Progress
+    /// ```
+    /// use fundsp_tutti::prelude64::*;
+    /// let wave = Wave::render_with_progress(44100.0, 1.0, &mut (brown() | brown()), |p| {
+    ///     println!("Rendering: {:.0}%", p * 100.0);
+    /// });
+    /// ```
+    pub fn render_with_progress(
+        sample_rate: f64,
+        duration: f64,
+        node: &mut dyn AudioUnit,
+        on_progress: impl Fn(f32),
+    ) -> Self {
         assert_eq!(node.inputs(), 0);
         assert!(node.outputs() > 0);
         assert!(duration >= 0.0);
@@ -447,6 +468,10 @@ impl Wave {
         let mut buffer_mut = buffer.buffer_mut();
         wave.len = length;
         let mut i = 0;
+        // Report progress roughly every 0.5 seconds of audio
+        let progress_interval = (sample_rate * 0.5) as usize;
+        let mut next_progress = progress_interval;
+        on_progress(0.0);
         while i < length {
             let n = Num::min(length - i, MAX_BUFFER_SIZE);
             node.process(n, &BufferRef::new(&[]), &mut buffer_mut);
@@ -459,6 +484,10 @@ impl Wave {
                 }
             }
             i += n;
+            if i >= next_progress || i >= length {
+                on_progress(i as f32 / length as f32);
+                next_progress += progress_interval;
+            }
         }
         wave
     }
