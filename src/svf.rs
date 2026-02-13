@@ -305,7 +305,6 @@ impl<F: Real> SvfMode<F> for LowpassMode<F> {
         let cutoff = F::from_f32(input[1]);
         let q = F::from_f32(input[2]);
         if cutoff != params.cutoff || q != params.q {
-            //if squared(cutoff - params.cutoff) + squared(q - params.q) > F::zero() {
             params.cutoff = cutoff;
             params.q = q;
             self.update(params, coefs);

@@ -391,8 +391,6 @@ pub fn softsign<T: Num>(x: T) -> T {
 /// `softexp(x)` >= 0 for all `x`. Like the exponential function, `softexp(0)` = `softexp'(0)` = 1.
 #[inline]
 pub fn softexp<T: Num>(x: T) -> T {
-    // With a branch:
-    // if x > 0 { x * x + x + 1 } else { 1 / (1 - x) }
     let p = max(x, T::zero());
     p * p + p + T::one() / (T::one() + p - x)
 }

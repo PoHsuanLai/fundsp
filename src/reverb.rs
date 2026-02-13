@@ -72,9 +72,9 @@ pub fn reverb_fitness(reverb: An<impl AudioNode<Inputs = U2, Outputs = U2> + 'st
             response.set(channel, i, response.at(channel, i) * w);
         }
         let mut data = match channel {
-            0 | 1 => response.channel(channel).clone(),
+            0 | 1 => response.channel(channel).to_vec(),
             _ => {
-                let mut stereo = response.channel(0).clone();
+                let mut stereo = response.channel(0).to_vec();
                 for i in 0..stereo.len() {
                     stereo[i] += response.at(1, i);
                 }

@@ -33,9 +33,6 @@ impl core::fmt::Display for NetError {
     }
 }
 
-// This should be implemented at some point.
-//impl core::error::Error for NetError {}
-
 pub type NodeIndex = usize;
 pub type PortIndex = usize;
 

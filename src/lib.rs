@@ -1027,7 +1027,16 @@ pub type Queue<T, const N: usize> = lfqueue::ConstBoundedQueue<T, N>;
 #[cfg(feature = "std")]
 pub mod write;
 
-#[cfg(all(feature = "std", feature = "files"))]
+#[cfg(all(
+    feature = "std",
+    any(
+        feature = "wav",
+        feature = "flac",
+        feature = "mp3",
+        feature = "ogg",
+        feature = "files"
+    )
+))]
 pub mod read;
 
 #[cfg(all(feature = "std", feature = "fft"))]

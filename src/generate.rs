@@ -345,7 +345,7 @@ pub fn gen_granular(
 
     let create_grain =
         move |t: f64, _b: f32, v: f32, x: f32, y: f32, z: f32| -> (f32, f32, Box<dyn AudioUnit>) {
-            let f = if scale_vec.len() > 0 {
+            let f = if !scale_vec.is_empty() {
                 let d = lerp11(0.0, scale_vec.len() as f32 - 0.01, x);
                 midi_hz(scale_vec[d as usize] + 0.02 * (d - round(d)))
             } else {

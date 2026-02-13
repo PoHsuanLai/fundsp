@@ -127,7 +127,7 @@ impl Wave {
 
     /// Return a reference to the requested `channel`.
     #[inline]
-    pub fn channel(&self, channel: usize) -> &Vec<f32> {
+    pub fn channel(&self, channel: usize) -> &[f32] {
         &self.vec[channel]
     }
 

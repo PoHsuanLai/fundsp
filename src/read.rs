@@ -24,6 +24,16 @@ impl Wave {
         Wave::load_track(path, None)
     }
 
+    /// Load first track with a progress callback (0.0 to 1.0).
+    /// Progress is reported roughly every 0.5 seconds of decoded audio.
+    /// If the format doesn't report total frames, the callback is not invoked.
+    pub fn load_with_progress<P: AsRef<Path>>(
+        path: P,
+        on_progress: impl Fn(f32),
+    ) -> WaveResult<Wave> {
+        Wave::load_track_with_progress(path, None, on_progress)
+    }
+
     /// Load first track of audio from the given slice.
     /// Supported formats are anything that Symphonia can read.
     pub fn load_slice<S: AsRef<[u8]> + Send + Sync + 'static>(slice: S) -> WaveResult<Wave> {
@@ -39,13 +49,23 @@ impl Wave {
     ) -> WaveResult<Wave> {
         let hint = Hint::new();
         let source: Box<dyn MediaSource> = Box::new(Cursor::new(slice));
-        Wave::decode(source, track, hint)
+        Wave::decode(source, track, hint, &|_| {})
     }
 
     /// Load audio file from the given path. Track can be optionally selected.
     /// If not selected, the first track with a known codec will be loaded.
     /// Supported formats are anything that Symphonia can read.
     pub fn load_track<P: AsRef<Path>>(path: P, track: Option<usize>) -> WaveResult<Wave> {
+        Wave::load_track_with_progress(path, track, |_| {})
+    }
+
+    /// Load audio file with a progress callback (0.0 to 1.0).
+    /// Track can be optionally selected.
+    pub fn load_track_with_progress<P: AsRef<Path>>(
+        path: P,
+        track: Option<usize>,
+        on_progress: impl Fn(f32),
+    ) -> WaveResult<Wave> {
         let path = path.as_ref();
         let mut hint = Hint::new();
 
@@ -60,11 +80,16 @@ impl Wave {
             Err(error) => return Err(Error::IoError(error)),
         };
 
-        Wave::decode(source, track, hint)
+        Wave::decode(source, track, hint, &on_progress)
     }
 
     /// Decode track from the given source.
-    fn decode(source: Box<dyn MediaSource>, track: Option<usize>, hint: Hint) -> WaveResult<Wave> {
+    fn decode(
+        source: Box<dyn MediaSource>,
+        track: Option<usize>,
+        hint: Hint,
+        on_progress: &dyn Fn(f32),
+    ) -> WaveResult<Wave> {
         let stream = MediaSourceStream::new(source, Default::default());
 
         let format_opts = FormatOptions {
@@ -98,16 +123,27 @@ impl Wave {
                     _ => return Err(Error::DecodeError("Could not find track.")),
                 };
 
+                // Read total frame count for progress reporting (available for most formats).
+                let total_frames = track.codec_params.n_frames;
+                let sample_rate = track.codec_params.sample_rate.unwrap_or(44100) as f64;
+                // Report progress roughly every 0.5 seconds of decoded audio.
+                let progress_interval = (sample_rate * 0.5) as usize;
+
                 let decode_opts = DecoderOptions::default();
 
                 let mut decoder =
                     symphonia::default::get_codecs().make(&track.codec_params, &decode_opts)?;
+
+                let mut frames_decoded: usize = 0;
+                let mut next_progress_at = progress_interval;
+                on_progress(0.0);
 
                 loop {
                     let packet = match reader.next_packet() {
                         Ok(packet) => packet,
                         Err(err) => {
                             if let Some(wave_output) = wave {
+                                on_progress(1.0);
                                 return Ok(wave_output);
                             } else {
                                 return Err(err);
@@ -185,6 +221,17 @@ impl Wave {
                                             x[i],
                                         );
                                     }
+                                }
+
+                                frames_decoded += buffer_len;
+
+                                // Report progress periodically.
+                                if frames_decoded >= next_progress_at {
+                                    if let Some(total) = total_frames {
+                                        let ratio = frames_decoded as f32 / total as f32;
+                                        on_progress(ratio.min(1.0));
+                                    }
+                                    next_progress_at = frames_decoded + progress_interval;
                                 }
                             }
                         }

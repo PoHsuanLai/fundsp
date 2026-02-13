@@ -22,7 +22,8 @@ hashbrown = "0.16.1"
 microfft = { version = "0.6.0", features = ["size-32768"] }
 funutd = { version = "0.16.0", default-features = false }
 once_cell = { version = "1.21.3", default-features = false, features = ["race", "alloc"] }
-symphonia = { version = "0.5.5", optional = true, features = ["all"] }
+# Audio file decoding - symphonia with no default features, codecs enabled individually
+symphonia = { version = "0.5.5", optional = true, default-features = false }
 resampler = { version = "0.4.0", features = ["no_std"] }
 fft-convolver = { version = "0.3.0", optional = true }
 lfqueue = { version = "0.8.1", default-features = false }
@@ -40,9 +41,21 @@ read_input = "0.8.6"
 rayon = "1.10.0"
 
 [features]
-default = ["std", "files", "fft"]
+default = ["std", "files-all", "fft"]
 std = []
-files = ["dep:symphonia"]
+
+# Individual codec features
+# Note: wav needs pcm codec for actual audio decoding (wav is just the container format)
+wav = ["dep:symphonia", "symphonia/wav", "symphonia/pcm"]
+flac = ["dep:symphonia", "symphonia/flac"]
+mp3 = ["dep:symphonia", "symphonia/mp3"]
+ogg = ["dep:symphonia", "symphonia/ogg", "symphonia/vorbis"]
+
+# Convenience: all file formats
+files-all = ["wav", "flac", "mp3", "ogg"]
+# Backwards compat alias
+files = ["files-all"]
+
 fft = ["dep:fft-convolver"]
 
 [[bench]]

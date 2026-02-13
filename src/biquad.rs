@@ -957,10 +957,6 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> AudioNode for FixedDirtyBiquad<F, M, S
     }
 }
 
-// ============================================================================
-// Linkwitz-Riley Filters
-// ============================================================================
-
 /// Linkwitz-Riley filter order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LrOrder {
