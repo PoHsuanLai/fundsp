@@ -34,6 +34,33 @@ impl Wave {
         Wave::load_track_with_progress(path, None, on_progress)
     }
 
+    /// Load first track with progress and streaming peak callbacks.
+    /// `on_peaks` is called with accumulated level-0 peaks (256 spp)
+    /// each time progress is reported. Returns the wave and final peaks.
+    pub fn load_with_peaks<P: AsRef<Path>>(
+        path: P,
+        on_progress: impl Fn(f32),
+        on_peaks: impl Fn(Vec<(f32, f32)>),
+        on_metadata: impl Fn(usize, u32),
+        on_samples: impl Fn(&[f32]),
+    ) -> WaveResult<(Wave, Vec<(f32, f32)>)> {
+        let path = path.as_ref();
+        let mut hint = Hint::new();
+
+        if let Some(extension) = path.extension()
+            && let Some(extension_str) = extension.to_str()
+        {
+            hint.with_extension(extension_str);
+        }
+
+        let source: Box<dyn MediaSource> = match File::open(path) {
+            Ok(file) => Box::new(file),
+            Err(error) => return Err(Error::IoError(error)),
+        };
+
+        Wave::decode_with_peaks(source, None, hint, &on_progress, &on_peaks as &dyn Fn(Vec<(f32, f32)>), &on_metadata, &on_samples)
+    }
+
     /// Load first track of audio from the given slice.
     /// Supported formats are anything that Symphonia can read.
     pub fn load_slice<S: AsRef<[u8]> + Send + Sync + 'static>(slice: S) -> WaveResult<Wave> {
@@ -81,6 +108,155 @@ impl Wave {
         };
 
         Wave::decode(source, track, hint, &on_progress)
+    }
+
+    /// Decode track with streaming peak construction.
+    fn decode_with_peaks(
+        source: Box<dyn MediaSource>,
+        track: Option<usize>,
+        hint: Hint,
+        on_progress: &dyn Fn(f32),
+        on_peaks: &dyn Fn(Vec<(f32, f32)>),
+        on_metadata: &dyn Fn(usize, u32),
+        on_samples: &dyn Fn(&[f32]),
+    ) -> WaveResult<(Wave, Vec<(f32, f32)>)> {
+        use crate::peak_builder::StreamingPeakBuilder;
+
+        let stream = MediaSourceStream::new(source, Default::default());
+        let format_opts = FormatOptions { enable_gapless: false, ..Default::default() };
+        let metadata_opts: MetadataOptions = Default::default();
+        let mut wave: Option<Wave> = None;
+        let mut peak_builder = StreamingPeakBuilder::new(256);
+
+        match symphonia::default::get_probe().format(&hint, stream, &format_opts, &metadata_opts) {
+            Ok(probed) => {
+                let mut reader = probed.format;
+
+                let track = track.and_then(|t| reader.tracks().get(t)).or_else(|| {
+                    reader.tracks().iter().find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+                });
+
+                let track_id = match track {
+                    Some(track) => track.id,
+                    _ => return Err(Error::DecodeError("Could not find track.")),
+                };
+
+                let track = match reader.tracks().iter().find(|track| track.id == track_id) {
+                    Some(track) => track,
+                    _ => return Err(Error::DecodeError("Could not find track.")),
+                };
+
+                let total_frames = track.codec_params.n_frames;
+                let sample_rate = track.codec_params.sample_rate.unwrap_or(44100) as f64;
+                let progress_interval = (sample_rate * 0.5) as usize;
+
+                // Send metadata early so the UI can size the clip before decode finishes
+                if let Some(total) = total_frames {
+                    on_metadata(total as usize, sample_rate as u32);
+                }
+
+                let decode_opts = DecoderOptions::default();
+                let mut decoder = symphonia::default::get_codecs().make(&track.codec_params, &decode_opts)?;
+
+                let channels = track.codec_params.channels.map(|ch| ch.count()).unwrap_or(2);
+                if let Some(total) = total_frames {
+                    wave = Some(Wave::with_capacity(channels, sample_rate, total as usize));
+                }
+
+                let mut frames_decoded: usize = 0;
+                let mut next_progress_at = progress_interval;
+                let mut last_peaks_len: usize = 0;
+                let mut last_sample_count: usize = 0;
+                // Reuse a single decode buffer across all packets to avoid per-packet allocation.
+                let mut dest: Option<AudioBuffer<f32>> = None;
+                on_progress(0.0);
+
+                loop {
+                    let packet = match reader.next_packet() {
+                        Ok(packet) => packet,
+                        Err(err) => {
+                            if let Some(ref wave_output) = wave {
+                                // Send remaining ch-0 samples before finishing
+                                let ch0 = wave_output.channel(0);
+                                if ch0.len() > last_sample_count {
+                                    on_samples(&ch0[last_sample_count..]);
+                                }
+                                on_progress(1.0);
+                                let peaks = peak_builder.finish();
+                                on_peaks(peaks.clone());
+                                return Ok((wave.unwrap(), peaks));
+                            } else {
+                                return Err(err);
+                            }
+                        }
+                    };
+
+                    if packet.track_id() != track_id { continue; }
+
+                    match decoder.decode(&packet) {
+                        Ok(decoded) => {
+                            if wave.is_none() {
+                                let spec = *decoded.spec();
+                                wave = Some(Wave::new(spec.channels.count(), spec.rate as f64));
+                            }
+
+                            if let Some(ref mut wave_output) = wave {
+                                let buf = dest.get_or_insert_with(|| {
+                                    AudioBuffer::<f32>::new(decoded.capacity() as u64, *decoded.spec())
+                                });
+                                buf.clear();
+                                buf.render_silence(Some(decoded.frames()));
+                                decoded.convert(buf);
+
+                                let buffer_len = decoded.frames();
+                                let num_ch = buf.spec().channels.count();
+
+                                // Feed channel 0 to peak builder before appending to wave
+                                peak_builder.push_samples(&buf.chan(0)[..buffer_len]);
+
+                                let old_len = wave_output.len();
+                                for ch in 0..num_ch {
+                                    wave_output.channel_vec_mut(ch).extend_from_slice(&buf.chan(ch)[..buffer_len]);
+                                }
+                                wave_output.set_len(old_len + buffer_len);
+
+                                frames_decoded += buffer_len;
+
+                                // Send first snapshot immediately (don't wait for progress_interval)
+                                if last_peaks_len == 0 && peak_builder.len() > 0 {
+                                    on_peaks(peak_builder.snapshot());
+                                    last_peaks_len = peak_builder.len();
+                                    // Send ch-0 sample delta
+                                    let ch0 = wave_output.channel(0);
+                                    if ch0.len() > last_sample_count {
+                                        on_samples(&ch0[last_sample_count..]);
+                                        last_sample_count = ch0.len();
+                                    }
+                                } else if frames_decoded >= next_progress_at {
+                                    if let Some(total) = total_frames {
+                                        let ratio = frames_decoded as f32 / total as f32;
+                                        on_progress(ratio.min(1.0));
+                                    }
+                                    if peak_builder.len() > last_peaks_len {
+                                        on_peaks(peak_builder.snapshot());
+                                        last_peaks_len = peak_builder.len();
+                                    }
+                                    // Send ch-0 sample delta
+                                    let ch0 = wave_output.channel(0);
+                                    if ch0.len() > last_sample_count {
+                                        on_samples(&ch0[last_sample_count..]);
+                                        last_sample_count = ch0.len();
+                                    }
+                                    next_progress_at = frames_decoded + progress_interval;
+                                }
+                            }
+                        }
+                        Err(err) => return Err(err),
+                    }
+                }
+            }
+            Err(err) => Err(err),
+        }
     }
 
     /// Decode track from the given source.
@@ -134,8 +310,19 @@ impl Wave {
                 let mut decoder =
                     symphonia::default::get_codecs().make(&track.codec_params, &decode_opts)?;
 
+                let channels = track.codec_params.channels
+                    .map(|ch| ch.count())
+                    .unwrap_or(2);
+
+                // Pre-allocate using metadata frame count when available (WAV, FLAC).
+                if let Some(total) = total_frames {
+                    wave = Some(Wave::with_capacity(channels, sample_rate, total as usize));
+                }
+
                 let mut frames_decoded: usize = 0;
                 let mut next_progress_at = progress_interval;
+                // Reuse a single decode buffer across all packets to avoid per-packet allocation.
+                let mut dest: Option<AudioBuffer<f32>> = None;
                 on_progress(0.0);
 
                 loop {
@@ -161,67 +348,25 @@ impl Wave {
                             if wave.is_none() {
                                 let spec = *decoded.spec();
                                 wave = Some(Wave::new(spec.channels.count(), spec.rate as f64));
-                            } else {
-                                // TODO: Check that audio spec hasn't changed.
                             }
 
                             if let Some(ref mut wave_output) = wave {
-                                let mut dest = AudioBuffer::<f32>::new(
-                                    decoded.capacity() as u64,
-                                    *decoded.spec(),
-                                );
-                                dest.render_silence(Some(decoded.frames()));
-
-                                match &decoded {
-                                    symphonia::core::audio::AudioBufferRef::U8(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::U16(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::U24(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::U32(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::S8(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::S16(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::S24(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::S32(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::F32(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                    symphonia::core::audio::AudioBufferRef::F64(reff) => {
-                                        reff.convert(&mut dest);
-                                    }
-                                }
+                                let buf = dest.get_or_insert_with(|| {
+                                    AudioBuffer::<f32>::new(decoded.capacity() as u64, *decoded.spec())
+                                });
+                                buf.clear();
+                                buf.render_silence(Some(decoded.frames()));
+                                decoded.convert(buf);
 
                                 let buffer_len = decoded.frames();
+                                let num_ch = buf.spec().channels.count();
 
-                                for channel in 0..dest.spec().channels.count() {
-                                    let x = dest.chan(channel);
-                                    if channel == 0 {
-                                        for _i in 0..buffer_len {
-                                            wave_output.push(0.0);
-                                        }
-                                    }
-                                    for i in 0..buffer_len {
-                                        wave_output.set(
-                                            channel,
-                                            wave_output.len() - buffer_len + i,
-                                            x[i],
-                                        );
-                                    }
+                                // Batch-append all channels at once
+                                let old_len = wave_output.len();
+                                for ch in 0..num_ch {
+                                    wave_output.channel_vec_mut(ch).extend_from_slice(&buf.chan(ch)[..buffer_len]);
                                 }
+                                wave_output.set_len(old_len + buffer_len);
 
                                 frames_decoded += buffer_len;
 

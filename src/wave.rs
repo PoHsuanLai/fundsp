@@ -137,6 +137,20 @@ impl Wave {
         &mut self.vec[channel]
     }
 
+    /// Return a mutable reference to the backing Vec for a channel.
+    /// Use for efficient batch appending (extend_from_slice).
+    #[inline]
+    pub fn channel_vec_mut(&mut self, channel: usize) -> &mut Vec<f32> {
+        &mut self.vec[channel]
+    }
+
+    /// Set the wave length (number of frames). Caller must ensure all
+    /// channel Vecs have at least this many elements.
+    #[inline]
+    pub fn set_len(&mut self, len: usize) {
+        self.len = len;
+    }
+
     /// Add a channel to the wave from a slice of samples.
     /// The length of the wave and the number of samples must match.
     /// If there are no channels yet, then the length of the wave

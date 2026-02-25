@@ -72,9 +72,7 @@ where
     U: FrameUnop<X::Outputs>,
 {
     x: X,
-    // Current feedback value.
     value: Frame<f32, N>,
-    // Feedback operator.
     #[allow(dead_code)]
     feedback: U,
 }
@@ -190,11 +188,8 @@ where
     U: FrameUnop<X::Outputs>,
 {
     x: X,
-    /// Feedback processing.
     y: Y,
-    /// Current feedback value.
     value: Frame<f32, N>,
-    /// Feedback operator.
     #[allow(dead_code)]
     feedback: U,
 }
@@ -210,10 +205,7 @@ where
     Y::Outputs: Size<f32>,
     U: FrameUnop<X::Outputs>,
 {
-    /// Create new (single sample) feedback node.
-    /// It mixes back output of contained node `X` to its input, with extra feedback processing `Y`.
     /// The feedforward path does not include `Y`.
-    /// The contained nodes must have an equal number of inputs and outputs.
     pub fn new(x: X, y: Y, feedback: U) -> Self {
         let mut node = Feedback2 {
             x,
@@ -290,35 +282,25 @@ where
 /// Feedback unit with integrated delay.
 #[derive(Clone)]
 pub struct FeedbackUnit {
-    /// Contained feedback loop.
     x: Box<dyn AudioUnit>,
-    /// Number of input and output channels.
     channels: usize,
-    /// Current sample rate of the unit.
     sample_rate: f64,
-    /// Delay in seconds.
+    /// In seconds.
     delay: f64,
-    /// Delay in samples.
+    /// In samples (rounded from `delay`).
     samples: usize,
-    /// Feedback buffers, one per channel, power-of-two sized.
+    /// One per channel, power-of-two sized.
     feedback: Vec<Vec<f32>>,
-    /// Feedback buffer length minus one.
+    /// Buffer length minus one, used as bitmask for wrapping.
     mask: usize,
-    /// Current write index into feedback buffers.
     index: usize,
-    /// Buffer for assembling frames.
     tick_buffer: Vec<f32>,
-    /// Second buffer for assembling frames.
     tick_buffer2: Vec<f32>,
-    /// Buffer for assembling blocks.
     buffer: BufferVec,
 }
 
 impl FeedbackUnit {
-    /// Create new feedback unit with integrated feedback `delay` in seconds.
-    /// The delay amount is rounded to the nearest sample.
-    /// The minimum delay is one sample, which may also be accomplished by setting `delay` to zero.
-    /// The feedback unit mixes back delayed output of contained unit `x` to its input.
+    /// Delay is rounded to the nearest sample; minimum is one sample (delay=0 also gives one sample).
     pub fn new(delay: f64, x: Box<dyn AudioUnit>) -> Self {
         let channels = x.inputs();
         assert_eq!(channels, x.outputs());
@@ -339,7 +321,6 @@ impl FeedbackUnit {
         unit
     }
 
-    /// Calculate read index to delayed sample.
     #[inline]
     fn read_index(&self, delay: usize) -> usize {
         (self.index + self.mask + 1 - delay) & self.mask

@@ -49,7 +49,6 @@ impl Clone for NetBackend {
 }
 
 impl NetBackend {
-    /// Create new backend.
     pub(crate) fn new(
         sender: Arc<Queue<NetReturn, 256>>,
         receiver: Arc<Queue<NetMessage, 256>>,
@@ -62,7 +61,6 @@ impl NetBackend {
         }
     }
 
-    /// Handle changes made to the backend.
     fn handle_messages(&mut self) {
         let mut latest_net: Option<Box<Net>> = None;
         #[allow(clippy::while_let_loop)]

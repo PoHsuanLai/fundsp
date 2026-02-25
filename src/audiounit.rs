@@ -505,7 +505,6 @@ pub struct BigBlockAdapter {
 }
 
 impl BigBlockAdapter {
-    /// Create a new big block adapter.
     pub fn new(source: Box<dyn AudioUnit>) -> Self {
         let input = BufferVec::new(source.inputs());
         let output = BufferVec::new(source.outputs());
@@ -516,7 +515,6 @@ impl BigBlockAdapter {
         }
     }
 
-    /// Process a block of any size.
     pub fn process_big(&mut self, size: usize, input: &[&[f32]], output: &mut [&mut [f32]]) {
         let mut i = 0;
         while i < size {
@@ -595,7 +593,6 @@ pub struct BlockRateAdapter {
 }
 
 impl BlockRateAdapter {
-    /// Create new block rate adapter for the unit.
     pub fn new(unit: Box<dyn AudioUnit>) -> Self {
         assert_eq!(unit.inputs(), 0);
         let channels = unit.outputs();
@@ -689,7 +686,6 @@ pub struct DummyUnit {
 }
 
 impl DummyUnit {
-    /// Create new dummy unit.
     pub fn new(inputs: usize, outputs: usize) -> Self {
         Self { inputs, outputs }
     }

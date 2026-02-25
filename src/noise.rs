@@ -55,15 +55,13 @@ static MLS_POLY: [u32; 31] = [
 ];
 
 impl MlsState {
-    /// Creates a MLS.
-    /// Number of bits in the state space is n (1 <= n <= 31).
+    /// `n` is the number of bits in the state space (1..=31).
     pub fn new(n: u32) -> MlsState {
         assert!(n >= 1 && n <= 31);
         MlsState { n, s: (1 << n) - 1 }
     }
 
-    /// Creates a MLS from seed.
-    /// Number of bits in the state space is n (1 <= n <= 31).
+    /// `n` is the number of bits in the state space (1..=31).
     pub fn new_with_seed(n: u32, seed: u32) -> MlsState {
         assert!(n >= 1 && n <= 31);
         MlsState {
@@ -72,13 +70,12 @@ impl MlsState {
         }
     }
 
-    /// Sequence length. The sequence repeats after 2**n - 1 steps.
+    /// Repeats after 2**n - 1 steps.
     #[inline]
     pub fn length(self) -> u32 {
         (1 << self.n) - 1
     }
 
-    /// Returns the next state in the sequence.
     pub fn next(self) -> MlsState {
         let feedback = MLS_POLY[(self.n - 1) as usize] & self.s;
         let parity = feedback.count_ones() & 1;
@@ -88,7 +85,6 @@ impl MlsState {
         }
     }
 
-    /// The current value in the sequence, either 0 or 1.
     #[inline]
     pub fn value(self) -> u32 {
         (self.s >> (self.n - 1)) & 1
@@ -250,7 +246,6 @@ pub struct Hold {
 }
 
 impl Hold {
-    /// Create new sample-and-hold component.
     /// Variability is the randomness in individual hold times in 0...1.
     pub fn new(variability: f32) -> Self {
         let mut node = Self {

@@ -14,29 +14,23 @@ impl Path {
     pub fn new() -> Self {
         Self::default()
     }
-    /// Add `suffix` to path.
     pub fn push(&mut self, suffix: u32) {
         self.path.push(suffix);
     }
-    /// Set path suffix.
     pub fn set_suffix(&mut self, suffix: u32) {
         let i = self.path.len() - 1;
         self.path[i] = suffix;
     }
-    /// Get source or target input or output index.
     pub fn index(&self) -> usize {
         self.index
     }
-    /// Pop the last suffix in the path.
     pub fn pop(&mut self) {
         self.path.pop();
     }
-    /// Push `suffix` to path and return the path.
     pub fn with(mut self, suffix: u32) -> Path {
         self.push(suffix);
         self
     }
-    /// Set source or target `index` and return the path.
     pub fn with_index(mut self, index: usize) -> Path {
         self.index = index;
         self

@@ -24,19 +24,15 @@ impl Default for SnoopBuffer {
 }
 
 impl SnoopBuffer {
-    /// Returns sample at index `i`.
     pub fn at(&self, i: usize) -> f32 {
         self.data[i]
     }
-    /// Sets sample at index `i`.
     pub fn set(&mut self, i: usize, v: f32) {
         self.data[i] = v;
     }
-    /// Length of the buffer.
     pub fn size(&self) -> usize {
         MAX_BUFFER_SIZE
     }
-    /// Length of the buffer.
     #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         MAX_BUFFER_SIZE
@@ -52,7 +48,7 @@ pub struct Snoop {
 }
 
 impl Snoop {
-    /// Create a new snoop node. Returns a (frontend, backend) pair.
+    /// Returns a (frontend, backend) pair.
     pub fn new(capacity: usize) -> (Snoop, SnoopBackend) {
         let capacity = capacity.next_power_of_two();
         let queue = Arc::new(Queue::new_const());
@@ -70,22 +66,19 @@ impl Snoop {
         (snoop, snoop_backend)
     }
 
-    /// Return sample where `index` is a reverse index: the latest sample is at index 0.
+    /// `index` is a reverse index: the latest sample is at index 0.
     pub fn at(&self, index: usize) -> f32 {
         self.latest[(self.index + self.latest.len() - index - 1) & (self.latest.len() - 1)]
     }
 
-    /// Capacity of the latest sample buffer.
     pub fn capacity(&self) -> usize {
         self.latest.len()
     }
 
-    /// Total number of samples received so far.
     pub fn total(&self) -> u64 {
         self.total
     }
 
-    /// Get the next buffer of data, if available.
     /// Either this method or `update` should be polled repeatedly.
     pub fn get(&mut self) -> Option<SnoopBuffer> {
         if let Some(buffer) = self.receiver.dequeue() {
@@ -100,7 +93,6 @@ impl Snoop {
         }
     }
 
-    /// Receive latest data.
     /// Either this method or `get` should be polled repeatedly.
     pub fn update(&mut self) {
         while let Some(_buffer) = self.get() {}

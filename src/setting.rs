@@ -73,129 +73,110 @@ pub struct Setting {
 }
 
 impl Setting {
-    /// Create setting for a center parameter.
     pub fn center(center: f32) -> Self {
         Self {
             parameter: Parameter::Center(center),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for center and Q parameters.
     pub fn center_q(center: f32, q: f32) -> Self {
         Self {
             parameter: Parameter::CenterQ(center, q),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for center, Q and gain parameters.
     pub fn center_q_gain(center: f32, q: f32, gain: f32) -> Self {
         Self {
             parameter: Parameter::CenterQGain(center, q, gain),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for constant values.
     pub fn value(value: f32) -> Self {
         Self {
             parameter: Parameter::Value(value),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for biquad filter coefficients.
     pub fn biquad(a1: f32, a2: f32, b0: f32, b1: f32, b2: f32) -> Self {
         Self {
             parameter: Parameter::Biquad(a1, a2, b0, b1, b2),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for delay.
     pub fn delay(delay: f32) -> Self {
         Self {
             parameter: Parameter::Delay(delay),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for response time.
     pub fn time(time: f32) -> Self {
         Self {
             parameter: Parameter::Time(time),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for roughness in 0...1.
     pub fn roughness(roughness: f32) -> Self {
         Self {
             parameter: Parameter::Roughness(roughness),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for sample-and-hold variability in 0...1.
     pub fn variability(variability: f32) -> Self {
         Self {
             parameter: Parameter::Variability(variability),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for pan in -1...1.
     pub fn pan(pan: f32) -> Self {
         Self {
             parameter: Parameter::Pan(pan),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for attack and release times in seconds.
     pub fn attack_release(attack: f32, release: f32) -> Self {
         Self {
             parameter: Parameter::AttackRelease(attack, release),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for oscillator initial phase in 0...1.
     pub fn phase(phase: f32) -> Self {
         Self {
             parameter: Parameter::Phase(phase),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for generator seed.
     pub fn seed(seed: u64) -> Self {
         Self {
             parameter: Parameter::Seed(seed),
             address: ArrayVec::new(),
         }
     }
-    /// Create setting for envelope sampling interval in seconds.
     pub fn interval(time: f32) -> Self {
         Self {
             parameter: Parameter::Interval(time),
             address: ArrayVec::new(),
         }
     }
-    /// Add indexed address to setting.
     pub fn index(mut self, index: usize) -> Self {
         self.address.push(Address::Index(index));
         self
     }
-    /// Add Net contained node address to setting.
     pub fn node(mut self, id: NodeId) -> Self {
         self.address.push(Address::Node(id));
         self
     }
-    /// Add left choice address to setting.
     pub fn left(mut self) -> Self {
         self.address.push(Address::Left);
         self
     }
-    /// Add right choice address to setting.
     pub fn right(mut self) -> Self {
         self.address.push(Address::Right);
         self
     }
-    /// Access parameter.
     pub fn parameter(&self) -> &Parameter {
         &self.parameter
     }
-    /// Get the next level of address. This is used by structural nodes.
+    /// Used by structural nodes to traverse the address path.
     pub fn direction(&self) -> Address {
         if self.address.is_empty() {
             Address::Null
@@ -203,7 +184,7 @@ impl Setting {
             self.address[0].clone()
         }
     }
-    /// Peel one address level. This is used by structural nodes.
+    /// Remove first address level, used by structural nodes when descending.
     pub fn peel(mut self) -> Self {
         if !self.address.is_empty() {
             self.address.remove(0);

@@ -14,23 +14,14 @@ use alloc::vec::Vec;
 #[derive(Clone)]
 /// Individual AudioUnits are vertices in the graph.
 pub(crate) struct Vertex {
-    /// The unit.
     pub unit: Box<dyn AudioUnit>,
-    /// Edges connecting into this vertex. The length is equal to the number of inputs.
     pub source: Vec<NetEdge>,
-    /// Input buffers. The number of channels is equal to the number of inputs.
     pub input: BufferVec,
-    /// Output buffers. The number of channels is equal to the number of outputs.
     pub output: BufferVec,
-    /// Temporary output buffers. The number of channels is equal to the number of outputs.
     pub output_tmp: BufferVec,
-    /// Input for tick iteration. The length is equal to the number of inputs.
     pub tick_input: Vec<f32>,
-    /// Output for tick iteration. The length is equal to the number of outputs.
     pub tick_output: Vec<f32>,
-    /// Another, temporary tick output. The length is equal to the number of outputs.
     pub tick_output_tmp: Vec<f32>,
-    /// Stable, globally unique ID for this vertex.
     pub id: NodeId,
     /// Current phase of fading into next node in 0...1.
     pub fade_phase: f32,
@@ -38,14 +29,14 @@ pub(crate) struct Vertex {
     pub next: NodeEdit,
     /// The next node we will be fading into, if any. Not applicable to frontends.
     pub latest: NodeEdit,
-    /// This is set if all vertex inputs are sourced from successive outputs of the indicated node.
-    /// We can then omit copying and use the source node outputs directly.
+    /// If all vertex inputs are sourced from successive outputs of the indicated node,
+    /// we can omit copying and use the source node outputs directly.
     pub source_vertex: Option<(NodeIndex, usize)>,
     /// Network revision in which this vertex was changed last.
     pub changed: u64,
-    /// Used during order determination: number of unaccounted for outputs.
+    /// Used during order determination.
     pub unplugged: usize,
-    /// Used during order determination: has this vertex been ordered yet.
+    /// Used during order determination.
     pub ordered: bool,
 }
 
@@ -77,24 +68,20 @@ impl Vertex {
         vertex
     }
 
-    /// Number of input channels.
     #[inline]
     pub fn inputs(&self) -> usize {
         self.tick_input.len()
     }
 
-    /// Number of output channels.
     #[inline]
     pub fn outputs(&self) -> usize {
         self.tick_output.len()
     }
 
-    /// Preallocate everything.
     pub fn allocate(&mut self) {
         self.unit.allocate();
     }
 
-    /// Calculate source vertex and source port.
     pub fn update_source_vertex(&mut self) {
         self.source_vertex = None;
         if self.inputs() == 0 {
@@ -135,7 +122,6 @@ impl Vertex {
         core::mem::swap(&mut self.next.unit, &mut self.latest.unit);
     }
 
-    /// Process one sample.
     #[inline]
     pub fn tick(&mut self, sample_rate: f32, sender: &Option<Arc<Queue<NetReturn, 256>>>) {
         self.unit.tick(&self.tick_input, &mut self.tick_output);
@@ -157,7 +143,6 @@ impl Vertex {
         }
     }
 
-    /// Process a block of samples.
     #[inline]
     pub fn process(
         &mut self,
@@ -228,7 +213,6 @@ impl Vertex {
         }
     }
 
-    /// Edit this vertex.
     pub fn enqueue(&mut self, edit: &mut NodeEdit, sender: &Option<Arc<Queue<NetReturn, 256>>>) {
         if self.next.unit.is_some() {
             // Replace the latest unit.
