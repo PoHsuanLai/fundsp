@@ -985,6 +985,7 @@ pub mod noise;
 pub mod oscillator;
 pub mod oversample;
 pub mod pan;
+pub mod peak_builder;
 pub mod prelude;
 pub mod prelude32;
 pub mod prelude64;
@@ -1006,7 +1007,6 @@ pub mod sound;
 pub mod svf;
 pub mod system;
 pub mod vertex;
-pub mod peak_builder;
 pub mod wave;
 pub mod wavetable;
 

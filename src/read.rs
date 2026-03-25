@@ -58,7 +58,15 @@ impl Wave {
             Err(error) => return Err(Error::IoError(error)),
         };
 
-        Wave::decode_with_peaks(source, None, hint, &on_progress, &on_peaks as &dyn Fn(Vec<(f32, f32)>), &on_metadata, &on_samples)
+        Wave::decode_with_peaks(
+            source,
+            None,
+            hint,
+            &on_progress,
+            &on_peaks as &dyn Fn(Vec<(f32, f32)>),
+            &on_metadata,
+            &on_samples,
+        )
     }
 
     /// Load first track of audio from the given slice.
@@ -123,7 +131,10 @@ impl Wave {
         use crate::peak_builder::StreamingPeakBuilder;
 
         let stream = MediaSourceStream::new(source, Default::default());
-        let format_opts = FormatOptions { enable_gapless: false, ..Default::default() };
+        let format_opts = FormatOptions {
+            enable_gapless: false,
+            ..Default::default()
+        };
         let metadata_opts: MetadataOptions = Default::default();
         let mut wave: Option<Wave> = None;
         let mut peak_builder = StreamingPeakBuilder::new(256);
@@ -133,7 +144,10 @@ impl Wave {
                 let mut reader = probed.format;
 
                 let track = track.and_then(|t| reader.tracks().get(t)).or_else(|| {
-                    reader.tracks().iter().find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+                    reader
+                        .tracks()
+                        .iter()
+                        .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
                 });
 
                 let track_id = match track {
@@ -156,9 +170,14 @@ impl Wave {
                 }
 
                 let decode_opts = DecoderOptions::default();
-                let mut decoder = symphonia::default::get_codecs().make(&track.codec_params, &decode_opts)?;
+                let mut decoder =
+                    symphonia::default::get_codecs().make(&track.codec_params, &decode_opts)?;
 
-                let channels = track.codec_params.channels.map(|ch| ch.count()).unwrap_or(2);
+                let channels = track
+                    .codec_params
+                    .channels
+                    .map(|ch| ch.count())
+                    .unwrap_or(2);
                 if let Some(total) = total_frames {
                     wave = Some(Wave::with_capacity(channels, sample_rate, total as usize));
                 }
@@ -191,7 +210,9 @@ impl Wave {
                         }
                     };
 
-                    if packet.track_id() != track_id { continue; }
+                    if packet.track_id() != track_id {
+                        continue;
+                    }
 
                     match decoder.decode(&packet) {
                         Ok(decoded) => {
@@ -202,7 +223,10 @@ impl Wave {
 
                             if let Some(ref mut wave_output) = wave {
                                 let buf = dest.get_or_insert_with(|| {
-                                    AudioBuffer::<f32>::new(decoded.capacity() as u64, *decoded.spec())
+                                    AudioBuffer::<f32>::new(
+                                        decoded.capacity() as u64,
+                                        *decoded.spec(),
+                                    )
                                 });
                                 buf.clear();
                                 buf.render_silence(Some(decoded.frames()));
@@ -216,7 +240,9 @@ impl Wave {
 
                                 let old_len = wave_output.len();
                                 for ch in 0..num_ch {
-                                    wave_output.channel_vec_mut(ch).extend_from_slice(&buf.chan(ch)[..buffer_len]);
+                                    wave_output
+                                        .channel_vec_mut(ch)
+                                        .extend_from_slice(&buf.chan(ch)[..buffer_len]);
                                 }
                                 wave_output.set_len(old_len + buffer_len);
 
@@ -310,7 +336,9 @@ impl Wave {
                 let mut decoder =
                     symphonia::default::get_codecs().make(&track.codec_params, &decode_opts)?;
 
-                let channels = track.codec_params.channels
+                let channels = track
+                    .codec_params
+                    .channels
                     .map(|ch| ch.count())
                     .unwrap_or(2);
 
@@ -352,7 +380,10 @@ impl Wave {
 
                             if let Some(ref mut wave_output) = wave {
                                 let buf = dest.get_or_insert_with(|| {
-                                    AudioBuffer::<f32>::new(decoded.capacity() as u64, *decoded.spec())
+                                    AudioBuffer::<f32>::new(
+                                        decoded.capacity() as u64,
+                                        *decoded.spec(),
+                                    )
                                 });
                                 buf.clear();
                                 buf.render_silence(Some(decoded.frames()));
@@ -364,7 +395,9 @@ impl Wave {
                                 // Batch-append all channels at once
                                 let old_len = wave_output.len();
                                 for ch in 0..num_ch {
-                                    wave_output.channel_vec_mut(ch).extend_from_slice(&buf.chan(ch)[..buffer_len]);
+                                    wave_output
+                                        .channel_vec_mut(ch)
+                                        .extend_from_slice(&buf.chan(ch)[..buffer_len]);
                                 }
                                 wave_output.set_len(old_len + buffer_len);
 
