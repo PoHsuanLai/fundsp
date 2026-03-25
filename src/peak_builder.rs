@@ -3,6 +3,8 @@
 //! Accumulates min/max peaks from decoded audio samples in fixed-size bins.
 //! Used during wave decode to build waveform data without a second pass.
 
+use alloc::vec::Vec;
+
 /// Builds level-0 mipmap peaks incrementally from decoded audio chunks.
 pub struct StreamingPeakBuilder {
     peaks: Vec<(f32, f32)>,
