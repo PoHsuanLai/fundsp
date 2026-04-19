@@ -421,3 +421,34 @@ impl Wave {
         }
     }
 }
+
+#[cfg(feature = "bevy_asset")]
+mod asset {
+    use super::{Wave, WaveError};
+    use alloc::sync::Arc;
+
+    /// Asset wrapper around `Arc<Wave>`. Cheap-to-clone for use sites that
+    /// need shared ownership of decoded samples (FunDSP units like
+    /// `SamplerUnit` take `Arc<Wave>`).
+    #[derive(Clone, bevy_asset::Asset, bevy_reflect::TypePath)]
+    pub struct WaveAsset(pub Arc<Wave>);
+
+    impl core::ops::Deref for WaveAsset {
+        type Target = Wave;
+        fn deref(&self) -> &Wave {
+            &self.0
+        }
+    }
+
+    impl tutti_asset::TuttiAsset for WaveAsset {
+        type Error = WaveError;
+        const EXTENSIONS: &'static [&'static str] = &["wav", "flac", "mp3", "ogg"];
+
+        fn from_bytes(bytes: &[u8]) -> core::result::Result<Self, Self::Error> {
+            Wave::load_slice(bytes.to_vec()).map(|w| Self(Arc::new(w)))
+        }
+    }
+}
+
+#[cfg(feature = "bevy_asset")]
+pub use asset::WaveAsset;
