@@ -16,7 +16,8 @@
     clippy::needless_range_loop,
     clippy::manual_range_contains,
     clippy::too_many_arguments,
-    clippy::comparison_chain
+    clippy::comparison_chain,
+    clippy::unnecessary_cast
 )]
 
 use numeric_array::{ArrayLength, NumericArray};
