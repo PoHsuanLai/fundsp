@@ -56,6 +56,12 @@ impl NodeId {
     }
 }
 
+impl core::fmt::Display for NodeId {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "n{}", self.0)
+    }
+}
+
 /// Node introduced with a crossfade.
 #[derive(Clone, Default)]
 pub(crate) struct NodeEdit {
