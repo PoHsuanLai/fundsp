@@ -158,7 +158,7 @@ where
 
     pub fn new(sample_rate: f64, attack_time: f32, release_time: f32) -> Self {
         let mut follower = AFollow::new(attack_time * 0.4, release_time * 0.4);
-        follower.set_sample_rate(sample_rate);
+        follower.set_sample_rate(crate::SampleRate(sample_rate));
         Limiter {
             lookahead: attack_time as f64,
             release: release_time as f64,
@@ -180,17 +180,19 @@ where
     type Outputs = N;
 
     fn reset(&mut self) {
-        self.set_sample_rate(self.sample_rate);
+        self.set_sample_rate(crate::SampleRate(self.sample_rate));
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.index = 0;
         self.sample_rate = sample_rate;
         let length = Self::buffer_length(sample_rate, self.lookahead);
         if length != self.reducer.length {
             self.reducer = Self::new_buffer(sample_rate, self.lookahead);
         }
-        self.follower.set_sample_rate(sample_rate);
+        self.follower
+            .set_sample_rate(crate::SampleRate(sample_rate));
         self.reducer.clear();
         self.buffer.clear();
     }
@@ -255,7 +257,7 @@ impl<F: Real> Declick<F> {
             duration,
             ..Default::default()
         };
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 }
@@ -269,7 +271,8 @@ impl<F: Real> AudioNode for Declick<F> {
         self.t = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate;
         self.sample_duration = F::from_f64(1.0 / sample_rate);
     }
@@ -419,7 +422,8 @@ impl AudioNode for MeterNode {
         self.state.reset(self.meter);
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.state.set_sample_rate(self.meter, sample_rate);
     }
 
@@ -474,7 +478,8 @@ impl AudioNode for Monitor {
         self.state.reset(self.meter);
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.state.set_sample_rate(self.meter, sample_rate);
     }
 

@@ -200,8 +200,9 @@ impl<X: AudioNode> An<X> {
         self.0.reset();
     }
     #[inline(always)]
-    pub fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.0.set_sample_rate(sample_rate);
+    pub fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.0.set_sample_rate(crate::SampleRate(sample_rate));
     }
     #[inline(always)]
     pub fn tick(&mut self, input: &Frame<f32, X::Inputs>) -> Frame<f32, X::Outputs> {

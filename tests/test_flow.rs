@@ -34,7 +34,7 @@ where
     let sample_rate = DEFAULT_SR;
 
     filter.reset();
-    filter.set_sample_rate(sample_rate);
+    filter.set_sample_rate(fundsp_tutti::SampleRate(sample_rate));
 
     let mut input = 1.0;
     let mut buffer = Vec::with_capacity(length);

@@ -186,7 +186,7 @@ where
         >> (multipass()
             & 0.2 * reverb2_stereo(10.0, 4.0, 0.5, 1.0, highshelf_hz(5000.0, 1.0, db_amp(-2.0))));
 
-    c.set_sample_rate(sample_rate);
+    c.set_sample_rate(fundsp_tutti::SampleRate(sample_rate));
 
     // Use block processing for maximum efficiency.
     let mut c = BlockRateAdapter::new(Box::new(c));

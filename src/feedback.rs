@@ -114,8 +114,9 @@ where
         self.value = Frame::default();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -240,9 +241,10 @@ where
         self.value = Frame::default();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
-        self.y.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
+        self.y.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -317,7 +319,7 @@ impl FeedbackUnit {
             tick_buffer2: vec![0.0; channels],
             buffer: BufferVec::new(channels),
         };
-        unit.set_sample_rate(DEFAULT_SR);
+        unit.set_sample_rate(DEFAULT_SAMPLE_RATE);
         unit
     }
 
@@ -336,10 +338,11 @@ impl AudioUnit for FeedbackUnit {
         self.index = 0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         if self.sample_rate != sample_rate {
             self.sample_rate = sample_rate;
-            self.x.set_sample_rate(sample_rate);
+            self.x.set_sample_rate(crate::SampleRate(sample_rate));
             self.samples = round(self.delay * sample_rate).max(1.0) as usize;
             let feedback_samples = self.samples.next_power_of_two();
             self.mask = feedback_samples - 1;

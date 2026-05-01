@@ -214,7 +214,8 @@ impl<F: Float> AudioNode for Biquad<F> {
         self.y2 = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate;
     }
 
@@ -298,9 +299,10 @@ impl<F: Real, N: Size<f32>> AudioNode for ButterLowpass<F, N> {
         self.biquad.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
-        self.biquad.set_sample_rate(sample_rate);
+        self.biquad.set_sample_rate(crate::SampleRate(sample_rate));
         self.set_cutoff(self.cutoff);
     }
 
@@ -384,7 +386,8 @@ impl<F: Real, N: Size<f32>> AudioNode for Resonator<F, N> {
         self.biquad.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         self.set_center_q(self.center, self.q);
     }
@@ -554,7 +557,7 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> FbBiquad<F, M, S> {
             s1: F::zero(),
             s2: F::zero(),
         };
-        filter.set_sample_rate(DEFAULT_SR);
+        filter.set_sample_rate(DEFAULT_SAMPLE_RATE);
         filter
     }
 }
@@ -570,7 +573,8 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> AudioNode for FbBiquad<F, M, S> {
         self.shape.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.params.sample_rate = F::from_f64(sample_rate);
         self.mode.update(&self.params, &mut self.coefs);
     }
@@ -651,7 +655,7 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> FixedFbBiquad<F, M, S> {
             s1: F::zero(),
             s2: F::zero(),
         };
-        filter.set_sample_rate(DEFAULT_SR);
+        filter.set_sample_rate(DEFAULT_SAMPLE_RATE);
         filter
     }
 
@@ -713,7 +717,8 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> AudioNode for FixedFbBiquad<F, M, S> {
         }
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.params.sample_rate = F::from_f64(sample_rate);
         self.mode.update(&self.params, &mut self.coefs);
     }
@@ -763,7 +768,7 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> DirtyBiquad<F, M, S> {
             s1: F::zero(),
             s2: F::zero(),
         };
-        filter.set_sample_rate(DEFAULT_SR);
+        filter.set_sample_rate(DEFAULT_SAMPLE_RATE);
         filter
     }
 }
@@ -780,7 +785,8 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> AudioNode for DirtyBiquad<F, M, S> {
         self.shape2.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.params.sample_rate = F::from_f64(sample_rate);
         self.mode.update(&self.params, &mut self.coefs);
     }
@@ -870,7 +876,7 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> FixedDirtyBiquad<F, M, S> {
             s1: F::zero(),
             s2: F::zero(),
         };
-        filter.set_sample_rate(DEFAULT_SR);
+        filter.set_sample_rate(DEFAULT_SAMPLE_RATE);
         filter
     }
 
@@ -933,7 +939,8 @@ impl<F: Real, M: BiquadMode<F>, S: Shape> AudioNode for FixedDirtyBiquad<F, M, S
         }
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.params.sample_rate = F::from_f64(sample_rate);
         self.mode.update(&self.params, &mut self.coefs);
     }
@@ -1032,10 +1039,11 @@ impl<F: Real> AudioNode for LinkwitzRileyLowpass<F> {
         }
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = F::from_f64(sample_rate);
         for biquad in &mut self.biquads {
-            biquad.set_sample_rate(sample_rate);
+            biquad.set_sample_rate(crate::SampleRate(sample_rate));
         }
         self.update_coefficients();
     }
@@ -1124,10 +1132,11 @@ impl<F: Real> AudioNode for LinkwitzRileyHighpass<F> {
         }
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = F::from_f64(sample_rate);
         for biquad in &mut self.biquads {
-            biquad.set_sample_rate(sample_rate);
+            biquad.set_sample_rate(crate::SampleRate(sample_rate));
         }
         self.update_coefficients();
     }
@@ -1202,9 +1211,11 @@ impl<F: Real> AudioNode for LinkwitzRileyCrossover<F> {
         self.highpass.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.lowpass.set_sample_rate(sample_rate);
-        self.highpass.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.lowpass.set_sample_rate(crate::SampleRate(sample_rate));
+        self.highpass
+            .set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -1240,7 +1251,7 @@ mod tests {
         // Test with a DC signal to verify steady-state behavior
         let mut crossover: LinkwitzRileyCrossover<f64> =
             LinkwitzRileyCrossover::new(LrOrder::Lr4, 1000.0);
-        crossover.set_sample_rate(44100.0);
+        crossover.set_sample_rate(crate::SampleRate(44100.0));
 
         // Let the filter settle with DC input
         let dc: Frame<f32, U1> = [1.0].into();
@@ -1268,7 +1279,7 @@ mod tests {
         let cutoff = 1000.0;
         let mut crossover: LinkwitzRileyCrossover<f64> =
             LinkwitzRileyCrossover::new(LrOrder::Lr4, cutoff);
-        crossover.set_sample_rate(44100.0);
+        crossover.set_sample_rate(crate::SampleRate(44100.0));
 
         // Generate a sine wave at the crossover frequency
         let sample_rate = 44100.0;
@@ -1312,8 +1323,8 @@ mod tests {
         for order in [LrOrder::Lr2, LrOrder::Lr4, LrOrder::Lr8] {
             let mut lp: LinkwitzRileyLowpass<f64> = LinkwitzRileyLowpass::new(order, 1000.0);
             let mut hp: LinkwitzRileyHighpass<f64> = LinkwitzRileyHighpass::new(order, 1000.0);
-            lp.set_sample_rate(44100.0);
-            hp.set_sample_rate(44100.0);
+            lp.set_sample_rate(crate::SampleRate(44100.0));
+            hp.set_sample_rate(crate::SampleRate(44100.0));
 
             let input: Frame<f32, U1> = [1.0].into();
             let _ = lp.tick(&input);

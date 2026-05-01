@@ -819,7 +819,8 @@ where
         self.ic2eq = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.params.sample_rate = convert(sample_rate);
         self.mode.update_frequency(&self.params, &mut self.coefs);
     }
@@ -985,7 +986,8 @@ where
         self.ic2eq = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.params.sample_rate = convert(sample_rate);
         self.mode.update_frequency(&self.params, &mut self.coefs);
     }
@@ -1068,8 +1070,9 @@ impl<F: Real> AudioNode for Morph<F> {
         self.filter.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.filter.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.filter.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]

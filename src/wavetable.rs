@@ -296,7 +296,8 @@ where
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate as f32;
         self.sample_duration = 1.0 / sample_rate as f32;
     }
@@ -392,7 +393,8 @@ impl AudioNode for PhaseSynth {
         self.phase_ready = false;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate as f32;
     }
 
@@ -467,8 +469,9 @@ impl AudioNode for PulseWave {
     fn reset(&mut self) {
         self.pulse.reset();
     }
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.pulse.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.pulse.set_sample_rate(crate::SampleRate(sample_rate));
     }
     fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         self.pulse.tick(input)

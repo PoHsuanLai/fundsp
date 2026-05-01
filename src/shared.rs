@@ -217,7 +217,8 @@ impl AudioNode for Timer {
         self.shared.set_value(0.0);
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = 1.0 / sample_rate;
     }
 
@@ -360,7 +361,8 @@ impl<T: Float> AudioNode for AtomicSynth<T> {
         self.phase = self.initial_phase;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate as f32;
         self.sample_duration = 1.0 / sample_rate as f32;
     }

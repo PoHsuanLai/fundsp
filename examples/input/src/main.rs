@@ -110,7 +110,7 @@ where
     // Here is the final input-to-output processing chain.
     let graph = input >> chorus >> (0.8 * reverb & 0.2 * multipass());
     let mut graph = BlockRateAdapter::new(Box::new(graph));
-    graph.set_sample_rate(config.sample_rate.0 as f64);
+    graph.set_sample_rate(fundsp_tutti::SampleRate(config.sample_rate.0 as f64));
 
     let mut next_value = move || graph.get_stereo();
 

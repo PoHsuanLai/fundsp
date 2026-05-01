@@ -178,7 +178,7 @@ where
             & (var(&reverb_amount) >> follow(0.01) >> split::<U2>()) * reverb)
         >> (snoop_backend0 | snoop_backend1);
 
-    net.set_sample_rate(sample_rate);
+    net.set_sample_rate(fundsp_tutti::SampleRate(sample_rate));
 
     // Use block processing for maximum efficiency.
     let mut backend = BlockRateAdapter::new(Box::new(net.backend()));

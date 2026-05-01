@@ -25,7 +25,9 @@ pub trait Shape: Clone + Sync + Send {
     }
     /// Set the sample rate. The default sample rate is 44.1 kHz.
     #[allow(unused_variables)]
-    fn set_sample_rate(&mut self, sample_rate: f64) {}
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+    }
     /// Reset state.
     fn reset(&mut self) {}
 }
@@ -178,7 +180,7 @@ impl<S: Shape> Adaptive<S> {
             smoothing: 0.0,
             state: 0.0,
         };
-        adaptive.set_sample_rate(DEFAULT_SR);
+        adaptive.set_sample_rate(DEFAULT_SAMPLE_RATE);
         adaptive
     }
 }
@@ -194,9 +196,10 @@ impl<S: Shape> Shape for Adaptive<S> {
         self.state = 1.0e-3;
         self.inner.reset();
     }
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.smoothing = pow(0.5, 1.0 / (self.timescale.to_f64() * sample_rate)).to_f32();
-        self.inner.set_sample_rate(sample_rate);
+        self.inner.set_sample_rate(crate::SampleRate(sample_rate));
     }
 }
 
@@ -209,7 +212,7 @@ pub struct Shaper<S: Shape> {
 impl<S: Shape> Shaper<S> {
     pub fn new(shape: S) -> Self {
         let mut shaper = Self { shape };
-        shaper.set_sample_rate(DEFAULT_SR);
+        shaper.set_sample_rate(DEFAULT_SAMPLE_RATE);
         shaper
     }
 }
@@ -223,8 +226,9 @@ impl<S: Shape> AudioNode for Shaper<S> {
         self.shape.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.shape.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.shape.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]

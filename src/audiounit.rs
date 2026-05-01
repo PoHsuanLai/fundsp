@@ -34,7 +34,8 @@ pub trait AudioUnit<S: Sample = F32>: Send + Sync + DynClone {
     /// The unit is allowed to reset itself here in response to sample rate changes.
     /// If the sample rate stays unchanged, then the goal is to maintain current state.
     #[allow(unused_variables)]
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         // The default implementation does nothing.
     }
 
@@ -384,8 +385,9 @@ where
     fn reset(&mut self) {
         self.0.reset();
     }
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.0.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.0.set_sample_rate(crate::SampleRate(sample_rate));
     }
     #[inline]
     fn tick(&mut self, input: &[f32], output: &mut [f32]) {
@@ -459,8 +461,9 @@ impl<I: Size<f32>, O: Size<f32>> AudioNode for Unit<I, O> {
     type Inputs = I;
     type Outputs = O;
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.unit.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.unit.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     fn reset(&mut self) {
@@ -540,8 +543,9 @@ impl AudioUnit for BigBlockAdapter {
     fn reset(&mut self) {
         self.source.reset();
     }
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.source.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.source.set_sample_rate(crate::SampleRate(sample_rate));
     }
     fn tick(&mut self, input: &[f32], output: &mut [f32]) {
         self.source.tick(input, output);
@@ -610,8 +614,9 @@ impl AudioUnit for BlockRateAdapter {
         self.unit.reset();
         self.index = MAX_BUFFER_SIZE;
     }
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.unit.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.unit.set_sample_rate(crate::SampleRate(sample_rate));
     }
     fn tick(&mut self, _input: &[f32], output: &mut [f32]) {
         if self.index == MAX_BUFFER_SIZE {

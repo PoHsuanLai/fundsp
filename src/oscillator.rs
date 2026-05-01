@@ -30,7 +30,7 @@ impl<F: Real> Sine<F> {
     pub fn new() -> Self {
         let mut sine = Sine::default();
         sine.reset();
-        sine.set_sample_rate(DEFAULT_SR);
+        sine.set_sample_rate(DEFAULT_SAMPLE_RATE);
         sine
     }
     /// Create sine oscillator with initial phase in 0...1.
@@ -42,7 +42,7 @@ impl<F: Real> Sine<F> {
             initial_phase: Some(F::from_f32(initial_phase)),
         };
         sine.reset();
-        sine.set_sample_rate(DEFAULT_SR);
+        sine.set_sample_rate(DEFAULT_SAMPLE_RATE);
         sine
     }
 }
@@ -59,7 +59,8 @@ impl<F: Real> AudioNode for Sine<F> {
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 
@@ -139,7 +140,7 @@ impl<N: Size<f32>> Dsf<N> {
             _marker: PhantomData,
         };
         node.reset();
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node.set_roughness(roughness);
         node
     }
@@ -169,7 +170,8 @@ impl<N: Size<f32>> AudioNode for Dsf<N> {
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 
@@ -248,7 +250,8 @@ impl Pluck {
         let loop_delay = floor(total_delay - epsilon);
         let allpass_delay = total_delay - loop_delay;
         self.tuning.reset();
-        self.tuning.set_sample_rate(self.sample_rate);
+        self.tuning
+            .set_sample_rate(crate::SampleRate(self.sample_rate));
         self.tuning.set_delay(allpass_delay as f32);
         self.line.resize(loop_delay as usize, 0.0);
         let mut rnd = Rnd::from_u64(self.hash);
@@ -276,10 +279,11 @@ impl AudioNode for Pluck {
         self.initialized = false;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         if self.sample_rate != sample_rate {
             self.sample_rate = sample_rate;
-            self.damping.set_sample_rate(sample_rate);
+            self.damping.set_sample_rate(crate::SampleRate(sample_rate));
             self.initialized = false;
         }
     }
@@ -333,7 +337,7 @@ impl Rossler {
     pub fn new() -> Self {
         let mut rossler = Self::default();
         rossler.reset();
-        rossler.set_sample_rate(DEFAULT_SR);
+        rossler.set_sample_rate(DEFAULT_SAMPLE_RATE);
         rossler
     }
 }
@@ -349,7 +353,8 @@ impl AudioNode for Rossler {
         self.z = 1.0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sr = convert(sample_rate);
     }
 
@@ -392,7 +397,7 @@ impl Lorenz {
     pub fn new() -> Self {
         let mut lorenz = Self::default();
         lorenz.reset();
-        lorenz.set_sample_rate(DEFAULT_SR);
+        lorenz.set_sample_rate(DEFAULT_SAMPLE_RATE);
         lorenz
     }
 }
@@ -408,7 +413,8 @@ impl AudioNode for Lorenz {
         self.z = 1.0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sr = convert(sample_rate);
     }
 
@@ -450,7 +456,7 @@ impl<F: Float> Ramp<F> {
     pub fn new() -> Self {
         let mut ramp = Self::default();
         ramp.reset();
-        ramp.set_sample_rate(DEFAULT_SR);
+        ramp.set_sample_rate(DEFAULT_SAMPLE_RATE);
         ramp
     }
     /// Create ramp generator with initial phase in 0...1.
@@ -462,7 +468,7 @@ impl<F: Float> Ramp<F> {
             initial_phase: Some(F::from_f32(initial_phase)),
         };
         ramp.reset();
-        ramp.set_sample_rate(DEFAULT_SR);
+        ramp.set_sample_rate(DEFAULT_SAMPLE_RATE);
         ramp
     }
 }
@@ -479,7 +485,8 @@ impl<F: Float> AudioNode for Ramp<F> {
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 
@@ -538,7 +545,7 @@ impl<F: Real> PolySaw<F> {
     pub fn new() -> Self {
         let mut osc = Self::default();
         osc.reset();
-        osc.set_sample_rate(DEFAULT_SR);
+        osc.set_sample_rate(DEFAULT_SAMPLE_RATE);
         osc
     }
     /// Create oscillator with initial phase in 0...1.
@@ -550,7 +557,7 @@ impl<F: Real> PolySaw<F> {
             initial_phase: Some(F::from_f32(initial_phase)),
         };
         osc.reset();
-        osc.set_sample_rate(DEFAULT_SR);
+        osc.set_sample_rate(DEFAULT_SAMPLE_RATE);
         osc
     }
 }
@@ -567,7 +574,8 @@ impl<F: Real> AudioNode for PolySaw<F> {
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 
@@ -614,7 +622,7 @@ impl<F: Real> PolySquare<F> {
     pub fn new() -> Self {
         let mut osc = Self::default();
         osc.reset();
-        osc.set_sample_rate(DEFAULT_SR);
+        osc.set_sample_rate(DEFAULT_SAMPLE_RATE);
         osc
     }
     /// Create oscillator with initial phase in 0...1.
@@ -626,7 +634,7 @@ impl<F: Real> PolySquare<F> {
             initial_phase: Some(F::from_f32(initial_phase)),
         };
         osc.reset();
-        osc.set_sample_rate(DEFAULT_SR);
+        osc.set_sample_rate(DEFAULT_SAMPLE_RATE);
         osc
     }
 }
@@ -643,7 +651,8 @@ impl<F: Real> AudioNode for PolySquare<F> {
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 
@@ -697,7 +706,7 @@ impl<F: Real> PolyPulse<F> {
     pub fn new() -> Self {
         let mut osc = Self::default();
         osc.reset();
-        osc.set_sample_rate(DEFAULT_SR);
+        osc.set_sample_rate(DEFAULT_SAMPLE_RATE);
         osc
     }
     /// Create oscillator with initial phase in 0...1.
@@ -709,7 +718,7 @@ impl<F: Real> PolyPulse<F> {
             initial_phase: Some(F::from_f32(initial_phase)),
         };
         osc.reset();
-        osc.set_sample_rate(DEFAULT_SR);
+        osc.set_sample_rate(DEFAULT_SAMPLE_RATE);
         osc
     }
 }
@@ -726,7 +735,8 @@ impl<F: Real> AudioNode for PolyPulse<F> {
         };
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 

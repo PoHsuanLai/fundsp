@@ -253,7 +253,7 @@ impl Hold {
             ..Self::default()
         };
         node.reset();
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
     /// Variability is the randomness in individual hold times in 0...1.
@@ -279,7 +279,8 @@ impl AudioNode for Hold {
         self.next_t = 0.0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = 1.0 / sample_rate;
     }
 

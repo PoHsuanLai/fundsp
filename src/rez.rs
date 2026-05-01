@@ -56,7 +56,8 @@ impl<F: Real, N: Size<f32>> AudioNode for Rez<F, N> {
         self.buf1 = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         self.set_cutoff_q(self.cutoff, self.q);
     }

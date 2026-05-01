@@ -71,7 +71,7 @@ where
             sample_duration: F::zero(),
             hash: 0,
         };
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node.reset();
         node
     }
@@ -121,7 +121,8 @@ where
         self.value_1 = self.value_0.clone();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 
@@ -243,7 +244,7 @@ where
             hash: 0,
             _marker: PhantomData,
         };
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node.reset();
         node
     }
@@ -297,7 +298,8 @@ where
         self.t_hash = self.hash;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_duration = convert(1.0 / sample_rate);
     }
 

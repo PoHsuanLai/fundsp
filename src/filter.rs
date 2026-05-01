@@ -55,7 +55,8 @@ impl<F: Real, N: Size<f32>> AudioNode for Lowpole<F, N> {
         self.value = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         self.set_cutoff(self.cutoff);
     }
@@ -115,7 +116,7 @@ impl<F: Real> DCBlock<F> {
             ..Default::default()
         };
         node.reset();
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 
@@ -136,7 +137,8 @@ impl<F: Real> AudioNode for DCBlock<F> {
         self.y1 = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         self.set_cutoff(self.cutoff);
     }
@@ -212,7 +214,8 @@ impl<F: Float> AudioNode for Pinkpass<F> {
         self.b6 = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
     }
 
@@ -306,7 +309,8 @@ impl<F: Real, N: Size<f32>> AudioNode for Allpole<F, N> {
         self.y1 = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
     }
 
@@ -389,7 +393,8 @@ impl<F: Real, N: Size<f32>> AudioNode for Highpole<F, N> {
         self.y1 = F::zero();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         self.set_cutoff(self.cutoff);
     }

@@ -464,7 +464,7 @@ fn test_basic() {
 
     let mut front_net = Net::new(0, 1);
     let dc_id = front_net.chain(Box::new(dc(1.0)));
-    front_net.set_sample_rate(48000.0);
+    front_net.set_sample_rate(fundsp_tutti::SampleRate(48000.0));
     let mut back_net = front_net.backend();
     assert_eq!(back_net.get_mono(), 1.0);
     front_net.set(Setting::value(2.0).node(dc_id));

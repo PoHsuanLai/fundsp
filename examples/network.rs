@@ -41,7 +41,7 @@ where
     let id_noise = net.chain(Box::new(zero()));
     let id_pan = net.chain(Box::new(pan(0.0)));
 
-    net.set_sample_rate(sample_rate);
+    net.set_sample_rate(fundsp_tutti::SampleRate(sample_rate));
 
     let backend = net.backend();
 

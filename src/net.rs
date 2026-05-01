@@ -131,8 +131,10 @@ pub struct Net {
     order: Option<Vec<NodeIndex>>,
     /// Translation map from node ID to vertex index.
     node_index: HashMap<NodeId, NodeIndex>,
-    /// Current sample rate.
-    sample_rate: f32,
+    /// Current sample rate. `f64` so the cascade to child units does not lose
+    /// precision. Vertex tick/process still take `f32` (FunDSP-internal SIMD
+    /// convention); the cast happens at the call seam below, exactly once.
+    sample_rate: f64,
     /// Optional frontend.
     front: Option<(Arc<Queue<NetMessage, 256>>, Arc<Queue<NetReturn, 256>>)>,
     /// Number of inputs in the backend. This is for checking consistency during commits.
@@ -190,7 +192,7 @@ impl Net {
             vertex: Vec::new(),
             order: None,
             node_index: HashMap::new(),
-            sample_rate: DEFAULT_SR as f32,
+            sample_rate: DEFAULT_SR,
             front: None,
             backend_inputs: inputs,
             backend_outputs: outputs,
@@ -230,7 +232,7 @@ impl Net {
     /// net.check();
     /// ```
     pub fn push(&mut self, mut unit: Box<dyn AudioUnit>) -> NodeId {
-        unit.set_sample_rate(self.sample_rate as f64);
+        unit.set_sample_rate(crate::SampleRate(self.sample_rate));
         let index = self.vertex.len();
         let id = NodeId::new();
         let vertex = Vertex::new(id, index, unit);
@@ -463,7 +465,7 @@ impl Net {
         let node_index = self.node_index[&node];
         assert_eq!(unit.inputs(), self.vertex[node_index].inputs());
         assert_eq!(unit.outputs(), self.vertex[node_index].outputs());
-        unit.set_sample_rate(self.sample_rate as f64);
+        unit.set_sample_rate(crate::SampleRate(self.sample_rate));
         core::mem::swap(&mut self.vertex[node_index].unit, &mut unit);
         self.vertex[node_index].changed = self.revision;
         unit
@@ -494,7 +496,7 @@ impl Net {
         let node_index = self.node_index[&node];
         assert_eq!(unit.inputs(), self.vertex[node_index].inputs());
         assert_eq!(unit.outputs(), self.vertex[node_index].outputs());
-        unit.set_sample_rate(self.sample_rate as f64);
+        unit.set_sample_rate(crate::SampleRate(self.sample_rate));
         unit.allocate();
         let mut edit = NodeEdit {
             unit: Some(unit),
@@ -1205,8 +1207,9 @@ impl Net {
                     }
                 }
             }
+            let sample_rate_f32 = self.sample_rate as f32;
             let vertex = &mut self.vertex[node_index];
-            vertex.tick(self.sample_rate, sender);
+            vertex.tick(sample_rate_f32, sender);
         }
 
         // Then we set the global outputs.
@@ -1239,11 +1242,12 @@ impl Net {
                 let ptr = &mut self.vertex[source_node].output as *mut BufferVec;
                 let vertex = &mut self.vertex[node_index];
                 // Safety: we know there is no aliasing, as self connections are prohibited.
+                let sample_rate_f32 = self.sample_rate as f32;
                 unsafe {
                     vertex.process(
                         size,
                         &(*ptr).buffer_ref().subset(source_port, vertex.inputs()),
-                        self.sample_rate,
+                        sample_rate_f32,
                         sender,
                     );
                 }
@@ -1265,10 +1269,11 @@ impl Net {
                         }
                     }
                 }
+                let sample_rate_f32 = self.sample_rate as f32;
                 let vertex = &mut self.vertex[node_index];
                 // Safety: we know there is no aliasing, as self connections are prohibited.
                 unsafe {
-                    vertex.process(size, &(*ptr).buffer_ref(), self.sample_rate, sender);
+                    vertex.process(size, &(*ptr).buffer_ref(), sample_rate_f32, sender);
                 }
             }
         }
@@ -1316,12 +1321,12 @@ impl AudioUnit for Net {
         self.output.channels()
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        let sample_rate = sample_rate as f32;
-        if self.sample_rate != sample_rate {
-            self.sample_rate = sample_rate;
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate_raw: f64 = sample_rate.get();
+        if self.sample_rate != sample_rate_raw {
+            self.sample_rate = sample_rate_raw;
             for vertex in &mut self.vertex {
-                vertex.unit.set_sample_rate(sample_rate as f64);
+                vertex.unit.set_sample_rate(sample_rate);
                 // Sample rate change counts as a change
                 // to be sent to the backend because
                 // we cannot change sample rate in the backend

@@ -122,8 +122,9 @@ impl AudioUnit for NetBackend {
         self.handle_messages();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.net.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.net.set_sample_rate(crate::SampleRate(sample_rate));
         self.handle_messages();
     }
 

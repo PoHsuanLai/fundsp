@@ -49,7 +49,7 @@ impl<F: Real> Follow<F> {
             ..Follow::default()
         };
         node.reset();
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 
@@ -92,7 +92,8 @@ impl<F: Real> AudioNode for Follow<F> {
         self.coeff_now = F::one();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         self.set_response_time(self.response_time);
     }
@@ -159,7 +160,7 @@ impl<F: Real> AFollow<F> {
             ..AFollow::default()
         };
         node.reset();
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 
@@ -215,7 +216,8 @@ impl<F: Real> AudioNode for AFollow<F> {
         self.rcoeff_now = F::one();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = convert(sample_rate);
         // Recalculate coefficients.
         self.set_time(self.atime, self.rtime);

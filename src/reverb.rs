@@ -240,17 +240,22 @@ impl<F: AudioNode<Inputs = U1, Outputs = U1>> AudioNode for Reverb<F> {
         self.feedback = 0.0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         for block in self.block.iter_mut() {
             for x in block.allpass0.iter_mut() {
-                x.set_sample_rate(sample_rate);
+                x.set_sample_rate(crate::SampleRate(sample_rate));
             }
             for x in block.allpass1.iter_mut() {
-                x.set_sample_rate(sample_rate);
+                x.set_sample_rate(crate::SampleRate(sample_rate));
             }
-            block.filter0.set_sample_rate(sample_rate);
-            block.filter1.set_sample_rate(sample_rate);
-            block.delay.set_sample_rate(sample_rate);
+            block
+                .filter0
+                .set_sample_rate(crate::SampleRate(sample_rate));
+            block
+                .filter1
+                .set_sample_rate(crate::SampleRate(sample_rate));
+            block.delay.set_sample_rate(crate::SampleRate(sample_rate));
         }
     }
 

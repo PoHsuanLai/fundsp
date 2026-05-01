@@ -40,7 +40,8 @@ impl<N: Size<f32>> AudioNode for Tick<N> {
         self.buffer = Frame::default();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate;
     }
 
@@ -87,7 +88,7 @@ impl Delay {
             time,
             ..Self::default()
         };
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 }
@@ -102,7 +103,8 @@ impl AudioNode for Delay {
         self.buffer.fill(0.0);
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         if self.sample_rate != sample_rate {
             self.sample_rate = sample_rate;
             self.time_in_samples = round(self.time * sample_rate) as usize;
@@ -176,7 +178,7 @@ where
             max_delay,
             ..Self::default()
         };
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 }
@@ -195,7 +197,8 @@ where
         self.buffer.fill(0.0);
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         let sample_rate = sample_rate as f32;
         if self.sample_rate != sample_rate {
             self.sample_rate = sample_rate;
@@ -337,8 +340,9 @@ where
     type Inputs = N;
     type Outputs = U1;
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     fn reset(&mut self) {
@@ -414,7 +418,7 @@ where
             max_delay,
             _marker: PhantomData,
         };
-        node.set_sample_rate(DEFAULT_SR);
+        node.set_sample_rate(DEFAULT_SAMPLE_RATE);
         node
     }
 }
@@ -433,7 +437,8 @@ where
         self.buffer.fill(0.0);
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         let sample_rate = sample_rate as f32;
         if self.sample_rate != sample_rate {
             self.sample_rate = sample_rate;

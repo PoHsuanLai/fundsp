@@ -58,11 +58,13 @@ pub trait AudioNode: Clone + Sync + Send {
     /// ### Example (Changing The Sample Rate)
     /// ```
     /// use fundsp_tutti::prelude64::*;
+    /// use fundsp_tutti::SampleRate;
     /// let mut node = saw_hz(440.0);
-    /// node.set_sample_rate(48_000.0);
+    /// node.set_sample_rate(SampleRate(48_000.0));
     /// ```
     #[allow(unused_variables)]
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         // The default implementation does nothing.
     }
 
@@ -379,7 +381,9 @@ pub trait GenericAudioNode<S: Sample>: Clone + Sync + Send {
 
     /// Set the sample rate.
     #[allow(unused_variables)]
-    fn set_sample_rate(&mut self, sample_rate: f64) {}
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+    }
 
     /// Process one sample.
     fn tick(&mut self, input: &Frame<S::Scalar, Self::Inputs>) -> Frame<S::Scalar, Self::Outputs>;
@@ -1010,9 +1014,10 @@ where
         self.y.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
-        self.y.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
+        self.y.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -1343,8 +1348,9 @@ where
         self.x.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -1510,9 +1516,10 @@ where
         self.y.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
-        self.y.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
+        self.y.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -1645,9 +1652,10 @@ where
         self.y.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
-        self.y.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
+        self.y.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -1806,9 +1814,10 @@ where
         self.y.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
-        self.y.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
+        self.y.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -1952,9 +1961,10 @@ where
         self.y.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
-        self.y.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
+        self.y.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -2053,8 +2063,9 @@ impl<X: AudioNode> AudioNode for Thru<X> {
         self.x.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]
@@ -2189,10 +2200,11 @@ where
         self.x.iter_mut().for_each(|node| node.reset());
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.x
             .iter_mut()
-            .for_each(|node| node.set_sample_rate(sample_rate));
+            .for_each(|node| node.set_sample_rate(crate::SampleRate(sample_rate)));
     }
 
     #[inline]
@@ -2341,10 +2353,11 @@ where
         self.x.iter_mut().for_each(|node| node.reset());
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.x
             .iter_mut()
-            .for_each(|node| node.set_sample_rate(sample_rate));
+            .for_each(|node| node.set_sample_rate(crate::SampleRate(sample_rate)));
     }
 
     #[inline]
@@ -2500,10 +2513,11 @@ where
         self.x.iter_mut().for_each(|node| node.reset());
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.x
             .iter_mut()
-            .for_each(|node| node.set_sample_rate(sample_rate));
+            .for_each(|node| node.set_sample_rate(crate::SampleRate(sample_rate)));
     }
 
     #[inline]
@@ -2660,10 +2674,11 @@ where
         self.x.iter_mut().for_each(|node| node.reset());
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.x
             .iter_mut()
-            .for_each(|node| node.set_sample_rate(sample_rate));
+            .for_each(|node| node.set_sample_rate(crate::SampleRate(sample_rate)));
     }
 
     #[inline]
@@ -2801,10 +2816,11 @@ where
         self.x.iter_mut().for_each(|node| node.reset());
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.x
             .iter_mut()
-            .for_each(|node| node.set_sample_rate(sample_rate));
+            .for_each(|node| node.set_sample_rate(crate::SampleRate(sample_rate)));
     }
 
     #[inline]

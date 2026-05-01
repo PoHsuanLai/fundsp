@@ -86,7 +86,7 @@ where
     X::Outputs: Size<f32> + Size<Frame<f32, X::Outputs>>,
 {
     pub fn new(source_rate: f64, target_rate: f64, quality: Quality, mut node: X) -> Self {
-        node.set_sample_rate(source_rate);
+        node.set_sample_rate(crate::SampleRate(source_rate));
         Self {
             x: node,
             quality: quality.clone(),
@@ -170,7 +170,8 @@ where
         self.x.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.x.reset();
         self.target_rate = sample_rate;
         self.resampler = ResamplerFir::new(
@@ -226,7 +227,7 @@ where
     /// Create new resampler. Resamples enclosed generator node output(s)
     /// at speed obtained from the input, where 1 is the original speed.
     pub fn new(sample_rate: f64, mut node: X) -> Self {
-        node.set_sample_rate(sample_rate);
+        node.set_sample_rate(crate::SampleRate(sample_rate));
         let hash = node.ping(true, AttoHash::new(Self::ID));
         node.ping(false, hash);
         Self {
@@ -273,8 +274,9 @@ where
         self.producer = 0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]

@@ -165,9 +165,11 @@ impl AudioUnit for SequencerBackend {
         self.sequencer.reset();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.handle_messages();
-        self.sequencer.set_sample_rate(sample_rate);
+        self.sequencer
+            .set_sample_rate(crate::SampleRate(sample_rate));
     }
 
     #[inline]

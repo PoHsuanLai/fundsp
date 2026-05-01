@@ -49,7 +49,8 @@ impl<N: Size<f32>> AudioNode for Fir<N> {
         self.v = Frame::default();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate;
     }
 

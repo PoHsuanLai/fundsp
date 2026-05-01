@@ -44,7 +44,7 @@ impl Slot {
             receiver: queue_a.clone(),
             sender: queue_b.clone(),
         };
-        initial_unit.set_sample_rate(DEFAULT_SR);
+        initial_unit.set_sample_rate(DEFAULT_SAMPLE_RATE);
         #[allow(clippy::unnecessary_cast)]
         let backend = SlotBackend {
             inputs,
@@ -183,14 +183,15 @@ impl AudioUnit for SlotBackend {
     }
 
     #[allow(clippy::unnecessary_cast)]
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate;
-        self.current.set_sample_rate(sample_rate);
+        self.current.set_sample_rate(crate::SampleRate(sample_rate));
         if let Some(next) = self.next.as_deref_mut() {
-            next.set_sample_rate(sample_rate);
+            next.set_sample_rate(crate::SampleRate(sample_rate));
         }
         if let Some(latest) = self.latest.as_deref_mut() {
-            latest.set_sample_rate(sample_rate);
+            latest.set_sample_rate(crate::SampleRate(sample_rate));
         }
     }
 

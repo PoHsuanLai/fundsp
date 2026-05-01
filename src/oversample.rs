@@ -208,7 +208,7 @@ where
     /// Create new oversampler. 2x oversamples enclosed node.
     pub fn new(sample_rate: f64, mut node: X) -> Self {
         let inner_sr = sample_rate * 2.0;
-        node.set_sample_rate(inner_sr);
+        node.set_sample_rate(crate::SampleRate(inner_sr));
         let hash = node.ping(true, AttoHash::new(Self::ID));
         node.ping(false, hash);
         Self {
@@ -248,9 +248,9 @@ where
         self.outv = Frame::default();
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        let inner_sr = sample_rate * 2.0;
-        self.x.set_sample_rate(inner_sr);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let inner_sr = sample_rate.get() * 2.0;
+        self.x.set_sample_rate(crate::SampleRate(inner_sr));
     }
 
     #[inline]

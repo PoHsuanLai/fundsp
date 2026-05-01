@@ -50,8 +50,9 @@ impl<X: AudioNode, F: FnMut(f32, f32, &mut X) + Clone + Sync + Send> AudioNode f
         self.delta_time = 0.0;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.x.set_sample_rate(sample_rate);
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
+        self.x.set_sample_rate(crate::SampleRate(sample_rate));
         self.sample_rate = convert(sample_rate);
     }
 

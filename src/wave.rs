@@ -115,7 +115,8 @@ impl Wave {
     }
 
     /// Set the sample rate. No resampling is done.
-    pub fn set_sample_rate(&mut self, sample_rate: f64) {
+    pub fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         self.sample_rate = sample_rate;
     }
 
@@ -475,7 +476,7 @@ impl Wave {
         assert_eq!(node.inputs(), 0);
         assert!(node.outputs() > 0);
         assert!(duration >= 0.0);
-        node.set_sample_rate(sample_rate);
+        node.set_sample_rate(crate::SampleRate(sample_rate));
         let length = (duration * sample_rate).round() as usize;
         let mut wave = Self::with_capacity(node.outputs(), sample_rate, length);
         let mut buffer = BufferVec::new(node.outputs());
@@ -560,7 +561,7 @@ impl Wave {
         assert_eq!(node.inputs(), self.channels());
         assert!(node.outputs() > 0);
         assert!(duration >= 0.0);
-        node.set_sample_rate(self.sample_rate());
+        node.set_sample_rate(crate::SampleRate(self.sample_rate()));
         let total_length = round(duration * self.sample_rate()) as usize;
         let input_length = min(total_length, self.length());
         let mut wave = Self::with_capacity(node.outputs(), self.sample_rate(), total_length);
@@ -623,7 +624,7 @@ impl Wave {
         assert_eq!(node.inputs(), channels);
         assert!(node.outputs() > 0);
         assert!(duration >= 0.0);
-        node.set_sample_rate(sample_rate);
+        node.set_sample_rate(crate::SampleRate(sample_rate));
         let total_length = round(duration * sample_rate) as usize;
         let input_length = min(
             total_length,

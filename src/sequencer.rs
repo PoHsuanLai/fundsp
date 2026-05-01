@@ -409,7 +409,7 @@ impl Sequencer {
         let duration = end_time - start_time;
         assert!(fade_in_time <= duration && fade_out_time <= duration);
         // Make sure the sample rate of the unit matches ours.
-        unit.set_sample_rate(self.sample_rate);
+        unit.set_sample_rate(crate::SampleRate(self.sample_rate));
         unit.allocate();
         let event = Event::new(
             unit,
@@ -448,7 +448,7 @@ impl Sequencer {
         let duration = end_time - start_time;
         assert!(fade_in_time <= duration && fade_out_time <= duration);
         // Make sure the sample rate of the unit matches ours.
-        unit.set_sample_rate(self.sample_rate);
+        unit.set_sample_rate(crate::SampleRate(self.sample_rate));
         unit.allocate();
         let event = Event::new(
             unit,
@@ -509,7 +509,7 @@ impl Sequencer {
         let duration = end_time - start_time;
         assert!(fade_in_time <= duration && fade_out_time <= duration);
         // Make sure the sample rate of the unit matches ours.
-        unit.set_sample_rate(self.sample_rate);
+        unit.set_sample_rate(crate::SampleRate(self.sample_rate));
         unit.allocate();
         let event = Event::new(
             unit,
@@ -823,7 +823,8 @@ impl AudioUnit for Sequencer {
         self.active_threshold = -f64::INFINITY;
     }
 
-    fn set_sample_rate(&mut self, sample_rate: f64) {
+    fn set_sample_rate(&mut self, sample_rate: crate::SampleRate) {
+        let sample_rate: f64 = sample_rate.get();
         if self.sample_rate != sample_rate {
             self.sample_rate = sample_rate;
             self.sample_duration = 1.0 / sample_rate;
@@ -836,7 +837,9 @@ impl AudioUnit for Sequencer {
                 self.active.push(past);
             }
             for i in 0..self.active.len() {
-                self.active[i].unit.set_sample_rate(sample_rate);
+                self.active[i]
+                    .unit
+                    .set_sample_rate(crate::SampleRate(sample_rate));
             }
             while let Some(active) = self.active.pop() {
                 self.ready.push(active);
