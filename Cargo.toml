@@ -29,8 +29,8 @@ fft-convolver = { version = "0.3.0", optional = true }
 lfqueue = { version = "0.8.1", default-features = false }
 
 tutti-asset = { version = "0.0.1", path = "../tutti-asset", default-features = false, optional = true }
-bevy_asset = { version = "0.17", default-features = false, optional = true }
-bevy_reflect = { version = "0.17", default-features = false, optional = true }
+bevy_asset = { version = "0.18", default-features = false, optional = true }
+bevy_reflect = { version = "0.18", default-features = false, optional = true }
 
 [dev-dependencies]
 anyhow = "1.0.89"
